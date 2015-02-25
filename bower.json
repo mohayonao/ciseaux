@@ -1,0 +1,26 @@
+{
+  "name": "ciseaux",
+  "description": "utility to chop an audio buffer",
+  "version": "0.0.0",
+  "authors": [
+    "nao yonamine <mohayonao@gmail.com>"
+  ],
+  "homepage": "https://github.com/mohayonao/ciseaux",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "src"
+  ],
+  "keywords": [
+    "webaudioapi",
+    "buffer"
+  ],
+  "license": "MIT",
+  "main": "build/ciseaux.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mohayonao/ciseaux.git"
+  }
+}

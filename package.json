@@ -1,10 +1,10 @@
 {
-  "name": "tape-buffer",
-  "description": "the my thought strongest template for es6 project",
+  "name": "ciseaux",
+  "description": "utility to chop an audio buffer",
   "version": "0.0.0",
-  "author": "mohayonao <mohayonao@gmail.com>",
+  "author": "nao yonamine <mohayonao@gmail.com>",
   "bugs": {
-    "url": "https://github.com/mohayonao/tape-buffer/issues"
+    "url": "https://github.com/mohayonao/ciseaux/issues"
   },
   "dependencies": {},
   "devDependencies": {
@@ -23,7 +23,7 @@
     "README.md",
     "lib"
   ],
-  "homepage": "https://github.com/mohayonao/tape-buffer/",
+  "homepage": "https://github.com/mohayonao/ciseaux/",
   "keywords": [
     "webaudioapi",
     "buffer"
@@ -32,12 +32,12 @@
   "main": "lib/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mohayonao/tape-buffer.git"
+    "url": "https://github.com/mohayonao/ciseaux.git"
   },
   "scripts": {
     "build": "npm run build-to5 && npm run build-browser && npm run build-minify",
-    "build-browser": "browserify lib --outfile build/tape-buffer.js",
-    "build-minify": "uglifyjs build/tape-buffer.js -o build/tape-buffer.min.js --source-map build/tape-buffer.min.map",
+    "build-browser": "browserify lib --standalone Ciseaux --outfile build/ciseaux.js",
+    "build-minify": "uglifyjs build/ciseaux.js -m -r self -o build/ciseaux.min.js",
     "build-to5": "babel src --out-dir lib",
     "cover": "babel-node node_modules/.bin/isparta cover --report text --report html node_modules/.bin/_mocha",
     "lint": "jshint src test --reporter node_modules/jshint-stylish/stylish.js",
