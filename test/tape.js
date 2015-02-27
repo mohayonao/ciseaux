@@ -611,9 +611,11 @@ describe("Tape", () => {
           { data: 3, beginTime: 0, endTime: 10 },
           { data: 4, beginTime: 0, endTime: 10 },
           { data: 5, beginTime: 0, endTime:  5 },
+
           { data: 10, beginTime: 0, endTime: 10 },
           { data: 20, beginTime: 0, endTime: 10 },
           { data: 30, beginTime: 0, endTime: 10 },
+
           { data: 8, beginTime: 5, endTime: 10 },
           { data: 9, beginTime: 0, endTime: 10 },
         ]);
@@ -634,9 +636,44 @@ describe("Tape", () => {
           { data: 2, beginTime: 0, endTime: 10 },
           { data: 3, beginTime: 0, endTime: 10 },
           { data: 4, beginTime: 0, endTime:  5 },
+
           { data: 10, beginTime: 0, endTime: 10 },
           { data: 20, beginTime: 0, endTime: 10 },
           { data: 30, beginTime: 0, endTime: 10 },
+
+          { data: 7, beginTime: 5, endTime: 10 },
+          { data: 8, beginTime: 0, endTime: 10 },
+          { data: 9, beginTime: 0, endTime: 10 },
+        ]);
+      });
+    });
+    context("given a function as a tape", () => {
+      it("works", () => {
+        let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
+
+        let result = tape.replace(-55, 30, (tape) => {
+          return tape.loop();
+        });
+
+        assert(result !== tape);
+
+        result = pickEach(result.toJSON().tracks[0], [ "data", "beginTime", "endTime" ]);
+        assert.deepEqual(result, [
+          { data: 0, beginTime: 0, endTime: 10 },
+          { data: 1, beginTime: 0, endTime: 10 },
+          { data: 2, beginTime: 0, endTime: 10 },
+          { data: 3, beginTime: 0, endTime: 10 },
+          { data: 4, beginTime: 0, endTime:  5 },
+
+          { data: 4, beginTime: 5, endTime: 10 },
+          { data: 5, beginTime: 0, endTime: 10 },
+          { data: 6, beginTime: 0, endTime: 10 },
+          { data: 7, beginTime: 0, endTime:  5 },
+          { data: 4, beginTime: 5, endTime: 10 },
+          { data: 5, beginTime: 0, endTime: 10 },
+          { data: 6, beginTime: 0, endTime: 10 },
+          { data: 7, beginTime: 0, endTime:  5 },
+
           { data: 7, beginTime: 5, endTime: 10 },
           { data: 8, beginTime: 0, endTime: 10 },
           { data: 9, beginTime: 0, endTime: 10 },
