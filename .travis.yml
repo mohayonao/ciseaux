@@ -2,5 +2,10 @@ language: node_js
 sudo: false
 node_js:
   - "0.12"
+env:
+  global:
+    - secure: "sAHAJCRXIUvxZCmfRqR4tpWGBAC5UN1Wsr5VY/SLSoH+S2ubST4MYon19JKxJWhZApht6x4rRD5HpY0JJHwYLOOqtVlA+K/93IaUUOznwviba8YVgu6Ij3AhZvq91OxwmSAdCYNeq1Mx+FpyDMvYeEqfCeQY5RnGB9f8xGspyZI="
 script:
   - "npm run travis"
+after_success:
+  - $(npm bin)/coveralls < ./coverage/lcov.info
