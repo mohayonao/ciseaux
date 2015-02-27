@@ -233,7 +233,10 @@ class Tape {
     return newInstance;
   }
 
-  render() {
+  render(...args) {
+    if (config.render[config.renderName]) {
+      return config.render[config.renderName].apply(this, [ this.toJSON() ].concat(args));
+    }
     return new Promise((resolve, reject) => {
       reject(new Error("not implemented"));
     });

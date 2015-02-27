@@ -1,5 +1,7 @@
 "use strict";
 
 export default {
-  sampleRate: 0
+  sampleRate: 0,
+  renderName: "",
+  render: {},
 };

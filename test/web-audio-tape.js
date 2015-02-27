@@ -2,6 +2,7 @@
 
 import assert from "power-assert";
 import sinon from "sinon";
+import config from "../src/config";
 import renderer from "../src/renderer";
 import Tape from "../src/tape";
 import WebAudioTape from "../src/web-audio-tape";
@@ -27,14 +28,23 @@ describe("WebAudioTape", () => {
       renderer.transfer.restore();
     });
   });
-  describe("#render(audioContext: AudioContext, numberOfChannels: number): Promise<AudioBuffer>", () => {
+  describe("render(audioContext: AudioContext, numberOfChannels: number): Promise<AudioBuffer>", () => {
+    let config$renderName;
+    beforeEach(() => {
+      config$renderName = config.renderName;
+    });
+    afterEach(() => {
+      config.renderName = config$renderName;
+    });
     it("works", () => {
+      config.renderName = "WebAudioRender";
+
       let buffer = audioContext.createBuffer(2, 100, 44100);
 
       buffer.getChannelData(0).set([ 0, 1, 2, 3, 4 ]);
       buffer.getChannelData(1).set([ 5, 6, 7, 8, 9 ]);
 
-      let tape = new WebAudioTape(buffer);
+      let tape = new WebAudioTape(buffer).slice(0);
 
       return tape.render(audioContext).then((audioBuffer) => {
         assert(audioBuffer !== buffer);
