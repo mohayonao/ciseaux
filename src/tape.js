@@ -196,6 +196,10 @@ class Tape {
     }
     beginTime = Math.max(0, beginTime);
 
+    if (typeof tape === "function") {
+      tape = tape(this.slice(beginTime, duration));
+    }
+
     return this.slice(0, beginTime).concat(tape, this.slice(beginTime + duration));
   }
 
