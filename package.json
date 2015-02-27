@@ -44,7 +44,7 @@
     "build-to5": "babel src --out-dir lib",
     "cover": "babel-node node_modules/.bin/isparta cover --report text --report html node_modules/.bin/_mocha",
     "lint": "jshint src test --reporter node_modules/jshint-stylish/stylish.js",
-    "test": "mocha",
+    "test": "mocha --require espower-babel/guess",
     "travis": "npm run lint && npm run test"
   }
 }
