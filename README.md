@@ -2,7 +2,6 @@
 [![Build Status](http://img.shields.io/travis/mohayonao/ciseaux.svg?style=flat-square)](https://travis-ci.org/mohayonao/ciseaux)
 [![NPM Version](http://img.shields.io/npm/v/ciseaux.svg?style=flat-square)](https://www.npmjs.org/package/ciseaux)
 [![Bower](http://img.shields.io/bower/v/ciseaux.svg?style=flat-square)](http://bower.io/search/?q=ciseaux)
-[![Coverage Status](http://img.shields.io/coveralls/mohayonao/ciseaux.svg?style=flat-square)](https://coveralls.io/r/mohayonao/ciseaux?branch=master)
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](http://mohayonao.mit-license.org/)
 
 > JavaScript utility to chop an audio buffer, inspired from [youpy/scissor](https://github.com/youpy/scissor)
@@ -28,8 +27,8 @@ downloads:
 
 ## :scissors: API
 - `Ciseaux.silence(duration: number): Tape`
-- `Ciseaux.concat(tapes: Tape[]): Tape`
-- `Ciseaux.mix(tapes: Tape[], fillMethod='silence'): Tape`
+- `Ciseaux.concat(...tapes: Tape): Tape`
+- `Ciseaux.mix(...tapes: Tape, [method='silence']): Tape`
 
 ### Ciseaux.Tape
 - `constructor(audioBuffer: AudioBuffer)`
@@ -54,7 +53,7 @@ downloads:
 - `fill(duration: number): Tape`
 - `replace(startTime: number = 0, duration: number = 0, tape: Tape = null): Tape`
 - `split(n: number = 2): Tape[]`
-- `mix(tape: Tape, fillMethod = 'silence'): Tape`
+- `mix(...tapes: Tape, [method = 'silence']): Tape`
 - `render(audioContext: AudioContext): Promise<AudioBuffer>`
 - `dispose(): void`
 
