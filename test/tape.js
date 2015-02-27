@@ -1,6 +1,7 @@
 "use strict";
 
 import assert from "power-assert";
+import config from "../src/config";
 import Fragment from "../src/fragment";
 import Tape from "../src/tape";
 
@@ -872,13 +873,43 @@ describe("Tape", () => {
     });
   });
   describe("#render(): Promise", () => {
-    it("works", () => {
-      let tape = new Tape(2, 8000);
+    let config$renderName;
+    before(() => {
+      config.render.SpyRender = (...args) => {
+        return new Promise((resolve) => {
+          resolve(args);
+        });
+      };
+      config$renderName = config.renderName;
+    });
+    after(() => {
+      config.renderName = config$renderName;
+      delete config.render.SpyRender;
+    });
+    context("exists render", () => {
+      it("works", () => {
+        config.renderName = "SpyRender";
 
-      return tape.render().then(() => {
-        throw new Error("NOT REACHED");
-      }, (e) => {
-        assert(e instanceof Error);
+        let tape = new Tape(2, 8000);
+
+        return tape.render("arg1", "arg2", "...args").then((args) => {
+          assert.deepEqual(args, [ tape.toJSON(), "arg1", "arg2", "...args" ]);
+        }, () => {
+          throw new Error("NOT REACHED");
+        });
+      });
+    });
+    context("not exists render", () => {
+      it("works", () => {
+        config.renderName = "";
+
+        let tape = new Tape(2, 8000);
+
+        return tape.render().then(() => {
+          throw new Error("NOT REACHED");
+        }, (e) => {
+          assert(e instanceof Error);
+        });
       });
     });
   });
