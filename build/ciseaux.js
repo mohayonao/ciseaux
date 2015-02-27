@@ -1,10 +1,30 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Ciseaux = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+module.exports = require("./lib/build-api")(require("./lib/web-audio-tape"));
+
+},{"./lib/build-api":2,"./lib/web-audio-tape":10}],2:[function(require,module,exports){
+"use strict";
+
+var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
+var Sequence = _interopRequire(require("./sequence"));
+
+var Tape = _interopRequire(require("./tape"));
+
+var silence = Tape.silence;
+var concat = Tape.concat;
+var mix = Tape.mix;
+
+module.exports = function (Tape) {
+  return { Sequence: Sequence, Tape: Tape, silence: silence, concat: concat, mix: mix };
+};
+},{"./sequence":7,"./tape":8}],3:[function(require,module,exports){
 "use strict";
 
 module.exports = {
-  sampleRate: 0
-};
-},{}],2:[function(require,module,exports){
+  sampleRate: 0,
+  renderName: "",
+  render: {} };
+},{}],4:[function(require,module,exports){
 "use strict";
 
 var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
@@ -88,7 +108,7 @@ var Fragment = (function () {
 })();
 
 module.exports = Fragment;
-},{}],3:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -144,7 +164,7 @@ var InlineWorker = (function () {
 
 module.exports = InlineWorker;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],4:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
@@ -453,7 +473,7 @@ module.exports = {
   },
   util: self
 };
-},{"./inline-worker":3}],5:[function(require,module,exports){
+},{"./inline-worker":5}],7:[function(require,module,exports){
 "use strict";
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
@@ -522,7 +542,7 @@ var Sequence = (function () {
 })();
 
 module.exports = Sequence;
-},{"./config":1,"./tape":6}],6:[function(require,module,exports){
+},{"./config":3,"./tape":8}],8:[function(require,module,exports){
 "use strict";
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
@@ -555,23 +575,26 @@ var Tape = (function () {
       configurable: true
     },
     concat: {
-      value: function concat(tapes) {
-        return new Tape(1, config.sampleRate).concat(tapes);
+      value: function concat() {
+        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments[_key];
+        }
+
+        return Tape.prototype.concat.apply(new Tape(1, config.sampleRate), args);
       },
       writable: true,
       configurable: true
     },
     mix: {
-      value: function mix(tapes, method) {
-        var newInstance = new Tape(1, config.sampleRate);
+      value: function mix() {
+        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments[_key];
+        }
 
-        if (Array.isArray(tapes)) {
-          tapes.forEach(function (tape) {
-            newInstance = newInstance.mix(tape, method);
-          });
-          if (1 < newInstance.tracks.length) {
-            newInstance.tracks.shift(); // remove first empty track
-          }
+        var newInstance = Tape.prototype.mix.apply(new Tape(1, config.sampleRate), args);
+
+        if (1 < newInstance.tracks.length) {
+          newInstance.tracks.shift(); // remove first empty track
         }
 
         return newInstance;
@@ -749,13 +772,15 @@ var Tape = (function () {
           tapes[_key] = arguments[_key];
         }
 
+        tapes = Array.prototype.concat.apply([], tapes);
+
         var newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
         newInstance.tracks = this.tracks.map(function (track) {
           return track.clone();
         });
 
-        Array.prototype.concat.apply([], tapes).forEach(function (tape) {
+        tapes.forEach(function (tape) {
           if (!(tape instanceof Tape && 0 < tape.duration)) {
             return;
           }
@@ -848,6 +873,10 @@ var Tape = (function () {
         }
         beginTime = Math.max(0, beginTime);
 
+        if (typeof tape === "function") {
+          tape = tape(this.slice(beginTime, duration));
+        }
+
         return this.slice(0, beginTime).concat(tape, this.slice(beginTime + duration));
       },
       writable: true,
@@ -872,14 +901,28 @@ var Tape = (function () {
       configurable: true
     },
     mix: {
-      value: function mix(tape, method) {
+      value: function mix() {
+        for (var _len = arguments.length, tapes = Array(_len), _key = 0; _key < _len; _key++) {
+          tapes[_key] = arguments[_key];
+        }
+
+        tapes = Array.prototype.concat.apply([], tapes);
+
+        var method = undefined;
+        if (typeof arguments[tapes.length - 1 + 0] === "string") {
+          method = tapes.pop();
+        }
+
         var newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
         newInstance.tracks = this.tracks.map(function (track) {
           return track.clone();
         });
 
-        if (tape instanceof Tape) {
+        tapes.forEach(function (tape) {
+          if (!(tape instanceof Tape && 0 < tape.duration)) {
+            return;
+          }
           if (newInstance._numberOfChannels < tape._numberOfChannels) {
             newInstance._numberOfChannels = tape._numberOfChannels;
           }
@@ -890,7 +933,7 @@ var Tape = (function () {
             tape = util.adjustDuration(tape, newInstance.duration, method);
           }
           newInstance.tracks = newInstance.tracks.concat(tape.tracks);
-        }
+        });
 
         return newInstance;
       },
@@ -899,6 +942,13 @@ var Tape = (function () {
     },
     render: {
       value: function render() {
+        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments[_key];
+        }
+
+        if (config.render[config.renderName]) {
+          return config.render[config.renderName].apply(this, [this.toJSON()].concat(args));
+        }
         return new Promise(function (resolve, reject) {
           reject(new Error("not implemented"));
         });
@@ -913,13 +963,23 @@ var Tape = (function () {
     },
     toJSON: {
       value: function toJSON() {
-        return {
-          tracks: this.tracks.map(function (track) {
-            return track.toJSON();
-          }),
-          duration: this.duration,
-          sampleRate: this.sampleRate,
-          numberOfChannels: this.numberOfChannels };
+        var tracks = this.tracks.map(function (track) {
+          return track.toJSON();
+        });
+        var duration = this.duration;
+        var sampleRate = this.sampleRate;
+        var numberOfChannels = this.numberOfChannels;
+
+        var usePan = tracks.some(function (fragments) {
+          return fragments.some(function (fragment) {
+            return fragment.pan !== 0;
+          });
+        });
+        if (usePan) {
+          numberOfChannels = Math.max(2, numberOfChannels);
+        }
+
+        return { tracks: tracks, duration: duration, sampleRate: sampleRate, numberOfChannels: numberOfChannels };
       },
       writable: true,
       configurable: true
@@ -967,7 +1027,7 @@ util.adjustDuration = function (tape, duration, method) {
 module.exports = Tape;
 
 /* subclass responsibility */
-},{"./config":1,"./track":7}],7:[function(require,module,exports){
+},{"./config":3,"./track":9}],9:[function(require,module,exports){
 "use strict";
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
@@ -1005,7 +1065,7 @@ var Track = (function () {
   }, {
     gain: {
       value: (function (_gain) {
-        var _gainWrapper = function gain() {
+        var _gainWrapper = function gain(_x) {
           return _gain.apply(this, arguments);
         };
 
@@ -1024,7 +1084,7 @@ var Track = (function () {
     },
     pan: {
       value: (function (_pan) {
-        var _panWrapper = function pan() {
+        var _panWrapper = function pan(_x2) {
           return _pan.apply(this, arguments);
         };
 
@@ -1139,7 +1199,7 @@ var Track = (function () {
 })();
 
 module.exports = Track;
-},{"./fragment":2}],8:[function(require,module,exports){
+},{"./fragment":4}],10:[function(require,module,exports){
 "use strict";
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
@@ -1181,34 +1241,6 @@ var WebAudioTape = (function (Tape) {
   _inherits(WebAudioTape, Tape);
 
   _prototypeProperties(WebAudioTape, null, {
-    render: {
-      value: function render(audioContext) {
-        var numberOfChannels = arguments[1] === undefined ? this.numberOfChannels : arguments[1];
-
-        var tape = this.toJSON();
-
-        tape.numberOfChannels = numberOfChannels;
-
-        return renderer.render(tape).then(function (audioData) {
-          var length = Math.floor(tape.duration * tape.sampleRate);
-          var audioBuffer = audioContext.createBuffer(numberOfChannels, length, tape.sampleRate);
-
-          if (audioBuffer.copyToChannel) {
-            for (var i = 0; i < numberOfChannels; i++) {
-              audioBuffer.copyToChannel(audioData[i], i);
-            }
-          } else {
-            for (var i = 0; i < numberOfChannels; i++) {
-              audioBuffer.getChannelData(i).set(audioData[i]);
-            }
-          }
-
-          return audioBuffer;
-        });
-      },
-      writable: true,
-      configurable: true
-    },
     dispose: {
       value: function dispose() {
         renderer.dispose([this._data]);
@@ -1221,19 +1253,32 @@ var WebAudioTape = (function (Tape) {
   return WebAudioTape;
 })(Tape);
 
+config.renderName = "WebAudioRender";
+config.render.WebAudioRender = function (tape, audioContext) {
+  var numberOfChannels = arguments[2] === undefined ? 0 : arguments[2];
+
+  numberOfChannels = Math.max(numberOfChannels, tape.numberOfChannels);
+
+  tape.numberOfChannels = numberOfChannels;
+
+  return renderer.render(tape).then(function (audioData) {
+    var length = Math.floor(tape.duration * tape.sampleRate);
+    var audioBuffer = audioContext.createBuffer(numberOfChannels, length, tape.sampleRate);
+
+    if (audioBuffer.copyToChannel) {
+      for (var i = 0; i < numberOfChannels; i++) {
+        audioBuffer.copyToChannel(audioData[i], i);
+      }
+    } else {
+      for (var i = 0; i < numberOfChannels; i++) {
+        audioBuffer.getChannelData(i).set(audioData[i]);
+      }
+    }
+
+    return audioBuffer;
+  });
+};
+
 module.exports = WebAudioTape;
-},{"./config":1,"./fragment":2,"./renderer":4,"./tape":6}],9:[function(require,module,exports){
-"use strict";
-
-var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
-
-var Sequence = _interopRequire(require("./sequence"));
-
-var Tape = _interopRequire(require("./web-audio-tape"));
-
-var silence = Tape.silence;
-var concat = Tape.concat;
-var mix = Tape.mix;
-module.exports = { Sequence: Sequence, Tape: Tape, silence: silence, concat: concat, mix: mix };
-},{"./sequence":5,"./web-audio-tape":8}]},{},[9])(9)
+},{"./config":3,"./fragment":4,"./renderer":6,"./tape":8}]},{},[1])(1)
 });
