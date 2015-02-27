@@ -42,7 +42,7 @@
     "build-browser": "browserify lib --standalone Ciseaux --outfile build/ciseaux.js",
     "build-minify": "uglifyjs build/ciseaux.js -m -r self -o build/ciseaux.min.js",
     "build-to5": "babel src --out-dir lib",
-    "cover": "babel-node node_modules/.bin/isparta cover --report text --report html node_modules/.bin/_mocha",
+    "cover": "babel-node node_modules/.bin/isparta cover --report text --report html --report lcov node_modules/.bin/_mocha",
     "lint": "jshint src test --reporter node_modules/jshint-stylish/stylish.js",
     "test": "mocha --require espower-babel/guess",
     "travis": "npm run lint && npm run test"
