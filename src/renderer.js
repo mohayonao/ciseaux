@@ -49,12 +49,12 @@ let worker = new InlineWorker(function() {
   };
 
   self.render = function(tape, destination) {
-    for (var i = 0; i < tape.tracks.length; i++) {
-      self._render(tape.tracks[i], destination, tape.sampleRate);
+    for (var ch = 0; ch < tape.tracks.length; ch++) {
+      self._render(ch, tape.tracks[ch], destination, tape.sampleRate);
     }
   };
 
-  self._render = function(fragments, destination, samplerate) {
+  self._render = function(ch, fragments, destination, samplerate) {
     var use_pan = fragments.some(function(fragment) {
       return fragment.pan !== 0;
     });
@@ -87,7 +87,7 @@ let worker = new InlineWorker(function() {
       }
       **/
 
-      var can_simple_copy = (i === 0) && pitch === 1 && !use_pan && fragment.gain === 1 &&
+      var can_simple_copy = (ch === 0) && pitch === 1 && !use_pan && fragment.gain === 1 &&
         !fragment.reverse && src_ch <= dst_ch && src_sub[0].length === dst_sub[0].length;
 
       if (can_simple_copy) {
