@@ -55,9 +55,9 @@ let worker = new InlineWorker(function() {
   };
 
   self._render = function(fragments, destination, samplerate) {
-    var abs_pan = fragments.reduce(function(abs_pan, fragment) {
-      return Math.max(abs_pan, fragment.pan);
-    }, 0);
+    var use_pan = fragments.some(function(fragment) {
+      return fragment.pan !== 0;
+    });
 
     var pos = 0;
 
@@ -87,15 +87,15 @@ let worker = new InlineWorker(function() {
       }
       **/
 
-      var can_simple_copy = (i === 0) && pitch === 1 && abs_pan === 0 &&
-        fragment.gain === 1 && !fragment.reverse && src_ch <= dst_ch;
+      var can_simple_copy = (i === 0) && pitch === 1 && !use_pan && fragment.gain === 1 &&
+        !fragment.reverse && src_ch <= dst_ch && src_sub[0].length === dst_sub[0].length;
 
       if (can_simple_copy) {
         self.mix[`${src_sub.length}->${dst_sub.length}`](src_sub, dst_sub);
       } else {
         self.process(src_sub, dst_sub, {
           gain: fragment.gain,
-          pan: abs_pan !== 0 ? Math.max(-1, Math.min(fragment.pan, +1)) : null,
+          pan: use_pan ? Math.max(-1, Math.min(fragment.pan, +1)) : null,
           reverse: !!fragment.reverse
         });
       }
