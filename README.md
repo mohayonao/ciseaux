@@ -80,7 +80,7 @@ tape.render(audioContext).then(function(audioBuffer) {
 
 ## :scissors: Examples
 
-[ciseaux - web examples](http://mohayonao.github.io/ciseaux/)
+[ciseaux - online demo](http://mohayonao.github.io/ciseaux/)
 
 #### slice + concat
 ```js
