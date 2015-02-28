@@ -118,8 +118,8 @@ class Tape {
     return newInstance;
   }
 
-  concat(...tapes) {
-    tapes = Array.prototype.concat.apply([], tapes);
+  concat(..._tapes) {
+    let tapes = Array.prototype.concat.apply([], _tapes);
 
     let newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
@@ -178,6 +178,11 @@ class Tape {
     duration = Math.max(0, util.toNumber(duration));
 
     let this_duration = this.duration;
+
+    if (this_duration === 0) {
+      return this.silence(duration);
+    }
+
     let loopCount = Math.floor(duration / this_duration);
     let remain = duration % this_duration;
 
@@ -213,8 +218,8 @@ class Tape {
     return tapes;
   }
 
-  mix(...tapes) {
-    tapes = Array.prototype.concat.apply([], tapes);
+  mix(..._tapes) {
+    let tapes = Array.prototype.concat.apply([], _tapes);
 
     let method;
     if (typeof tapes[tapes.length - 1] === "string") {
@@ -294,6 +299,9 @@ util.adjustNumberOfTracks = (tape, numberOfTracks) => {
 };
 
 util.adjustDuration = (tape, duration, method) => {
+  if (tape.duration === 0) {
+    return tape.silence(duration);
+  }
   switch (method) {
   case "fill":
     return tape.fill(duration);
