@@ -251,12 +251,21 @@ class Tape {
   }
 
   toJSON() {
-    return {
-      tracks: this.tracks.map(track => track.toJSON()),
-      duration: this.duration,
-      sampleRate: this.sampleRate,
-      numberOfChannels: this.numberOfChannels,
-    };
+    let tracks = this.tracks.map(track => track.toJSON());
+    let duration = this.duration;
+    let sampleRate = this.sampleRate;
+    let numberOfChannels = this.numberOfChannels;
+
+    let usePan = tracks.some((fragments) => {
+      return fragments.some((fragment) => {
+        return fragment.pan !== 0;
+      });
+    });
+    if (usePan) {
+      numberOfChannels = Math.max(2, numberOfChannels);
+    }
+
+    return { tracks, duration, sampleRate, numberOfChannels };
   }
 }
 
