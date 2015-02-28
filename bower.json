@@ -1,7 +1,7 @@
 {
   "name": "ciseaux",
   "description": "utility to chop an audio buffer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "authors": [
     "nao yonamine <mohayonao@gmail.com>"
   ],
@@ -10,8 +10,11 @@
     "**/.*",
     "node_modules",
     "bower_components",
+    "examples",
     "test",
-    "src"
+    "src",
+    "index.js",
+    "index.html"
   ],
   "keywords": [
     "webaudioapi",
