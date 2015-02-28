@@ -218,15 +218,15 @@ var worker = new InlineWorker(function () {
   };
 
   self.render = function (tape, destination) {
-    for (var i = 0; i < tape.tracks.length; i++) {
-      self._render(tape.tracks[i], destination, tape.sampleRate);
+    for (var ch = 0; ch < tape.tracks.length; ch++) {
+      self._render(ch, tape.tracks[ch], destination, tape.sampleRate);
     }
   };
 
-  self._render = function (fragments, destination, samplerate) {
-    var abs_pan = fragments.reduce(function (abs_pan, fragment) {
-      return Math.max(abs_pan, fragment.pan);
-    }, 0);
+  self._render = function (ch, fragments, destination, samplerate) {
+    var use_pan = fragments.some(function (fragment) {
+      return fragment.pan !== 0;
+    });
 
     var pos = 0;
 
@@ -256,14 +256,14 @@ var worker = new InlineWorker(function () {
       }
       **/
 
-      var can_simple_copy = i === 0 && pitch === 1 && abs_pan === 0 && fragment.gain === 1 && !fragment.reverse && src_ch <= dst_ch;
+      var can_simple_copy = ch === 0 && pitch === 1 && !use_pan && fragment.gain === 1 && !fragment.reverse && src_ch <= dst_ch && src_sub[0].length === dst_sub[0].length;
 
       if (can_simple_copy) {
         self.mix["" + src_sub.length + "->" + dst_sub.length](src_sub, dst_sub);
       } else {
         self.process(src_sub, dst_sub, {
           gain: fragment.gain,
-          pan: abs_pan !== 0 ? Math.max(-1, Math.min(fragment.pan, +1)) : null,
+          pan: use_pan ? Math.max(-1, Math.min(fragment.pan, +1)) : null,
           reverse: !!fragment.reverse
         });
       }
@@ -768,11 +768,11 @@ var Tape = (function () {
     },
     concat: {
       value: function concat() {
-        for (var _len = arguments.length, tapes = Array(_len), _key = 0; _key < _len; _key++) {
-          tapes[_key] = arguments[_key];
+        for (var _len = arguments.length, _tapes = Array(_len), _key = 0; _key < _len; _key++) {
+          _tapes[_key] = arguments[_key];
         }
 
-        tapes = Array.prototype.concat.apply([], tapes);
+        var tapes = Array.prototype.concat.apply([], _tapes);
 
         var newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
@@ -851,6 +851,11 @@ var Tape = (function () {
         duration = Math.max(0, util.toNumber(duration));
 
         var this_duration = this.duration;
+
+        if (this_duration === 0) {
+          return this.silence(duration);
+        }
+
         var loopCount = Math.floor(duration / this_duration);
         var remain = duration % this_duration;
 
@@ -902,14 +907,14 @@ var Tape = (function () {
     },
     mix: {
       value: function mix() {
-        for (var _len = arguments.length, tapes = Array(_len), _key = 0; _key < _len; _key++) {
-          tapes[_key] = arguments[_key];
+        for (var _len = arguments.length, _tapes = Array(_len), _key = 0; _key < _len; _key++) {
+          _tapes[_key] = arguments[_key];
         }
 
-        tapes = Array.prototype.concat.apply([], tapes);
+        var tapes = Array.prototype.concat.apply([], _tapes);
 
         var method = undefined;
-        if (typeof arguments[tapes.length - 1 + 0] === "string") {
+        if (typeof tapes[tapes.length - 1] === "string") {
           method = tapes.pop();
         }
 
@@ -1011,6 +1016,9 @@ util.adjustNumberOfTracks = function (tape, numberOfTracks) {
 };
 
 util.adjustDuration = function (tape, duration, method) {
+  if (tape.duration === 0) {
+    return tape.silence(duration);
+  }
   switch (method) {
     case "fill":
       return tape.fill(duration);
