@@ -223,10 +223,9 @@
 
     var player = new TapePlayer(app, audioContext);
 
-    [
+    Promise.all([
       "./sound/tape1.wav",
       "./sound/tape2.wav",
-      "./sound/tape3.wav",
     ].map(function(url, index) {
       return fetch(url).then(function(res) {
         return new Promise(function(resolve, reject) {
@@ -235,6 +234,19 @@
       }).then(function(audioBuffer) {
         window["tape" + (index + 1)] = new Ciseaux.Tape(audioBuffer);
       });
+    })).then(function() {
+      var length = audioContext.sampleRate * 10;
+      var sineWave = new Float32Array(length);
+      var audioBuffer = audioContext.createBuffer(1, length, audioContext.sampleRate);
+      var freq = 440 / audioContext.sampleRate;
+
+      for (var i = 0; i < length; i++) {
+        sineWave[i] = Math.sin(freq * i * 2 * Math.PI) * 0.1;
+      }
+
+      audioBuffer.getChannelData(0).set(sineWave);
+
+      window.tape3 = new Ciseaux.Tape(audioBuffer);
     });
 
     fetch("./README.md").then(function(res) {
