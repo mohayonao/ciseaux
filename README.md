@@ -63,31 +63,109 @@ downloads:
 ### Instance methods
 - `apply(instruments: object): Tape`
 
-## :scissors: Examples
+## :scissors: Usage
 ```js
-var tape = new Ciseaux.Tape(audioBuffer);
+tape = new Ciseaux.Tape(audioBuffer);
 
-var stutter = tape.split(100).map(function(tape) {
-  return tape.loop(4);
-});
+tape = Ciseaux.concat([ tape.slice(10, 1), tape.slice(2, 3) ]).loop(4);
 
-Ciseaux.concat(stutter).render(audioContext).then(function(audioBuffer) {
-  play(audioBuffer);
+tape.render(audioContext).then(function(audioBuffer) {
+  var bufSrc = audioContext.createBuffer();
+
+  bufSrc.buffer = audioBuffer;
+  bufSrc.start(audioContext.currentTime);
+  bufSrc.connect();
 });
 ```
 
-```js
-var seq = new Ciseaux.Sequence("x y  xyz", 0.2);
+## :scissors: Examples
 
-var tape = seq.apply({
-  x: foo,
-  y: function() {
-    return bar;
-  },
-  z: foo.reverse().
-}).loop(4).render(audioContext).then(function(audioBuffer) {
-  play(audioBuffer);
+[ciseaux - online demo](http://mohayonao.github.io/ciseaux/)
+
+#### slice + concat
+```js
+tape = tape2.slice(0, 1.5).concat(tape3.slice(0, 0.5), tape1.slice(-2));
+```
+
+#### slice + concat + loop
+```js
+tape = tape3.slice(0, 0.5).concat(Ciseaux.silence(0.5)).loop(4);
+```
+
+#### replace + reverse
+```js
+tape = tape1.replace(2, 3, function(tape) {
+  return tape.reverse();
 });
+```
+
+#### gain
+```js
+tape = Ciseaux.concat(tape1.split(128).map(function(tape, i) {
+  return tape.gain(i / 128);
+}));
+```
+
+#### pan
+```js
+tape = Ciseaux.concat(tape1.split(25).map(function(tape, i) {
+  return tape.pan(i % 2 ? -0.85 : +0.85);
+}));
+```
+
+#### pitch
+```js
+tape = Ciseaux.concat(tape1.split(128).map(function(tape, i) {
+  return tape.pitch(i / 128 + 0.5);
+}));
+```
+
+#### mix
+```js
+tape = tape1.mix(tape2.gain(0.5), "fill");
+```
+
+#### stutter
+```js
+tape = Ciseaux.concat(tape2.split(64).map(function(tape) {
+  return tape.loop(4).pitch(2);
+}));
+```
+
+#### phase
+```js
+tape = Ciseaux.mix([ 1, 0.95 ].map(function(rate) {
+  return tape2.pitch(rate).fill(10);
+}));
+```
+
+#### lace
+```js
+tape = Ciseaux.concat(tape1.split(32).map(function(tape, index) {
+  return index % 2 ? tape2.pitch(2).fill(tape.duration) : tape;
+}));
+```
+
+#### concrete
+```js
+tape = Ciseaux.mix([ -3, 0, 4, 7 ].map(function(midi) {
+  return tape1.pitch(Math.pow(2, midi * 1/12)).fill(10);
+})).gain(0.5);
+```
+
+#### sequence
+
+```js
+tape = new Ciseaux.Sequence("a bdacbba babfeg", 0.2)
+  .apply({
+    a: tape1.split(16)[0],
+    b: tape1.split(16)[1],
+    c: tape1.split(16)[2],
+    d: tape1.split(16)[3].gain(0.15),
+    e: tape2.split(16)[4].pitch(0.25),
+    f: tape2.split(16)[5].pitch(4).gain(0.1),
+    g: tape3.pitch(32),
+  }).loop(4);
 ```
 
 ## :scissors: License
