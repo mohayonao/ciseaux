@@ -10,20 +10,15 @@ class Tape {
     return new Tape(1, config.sampleRate).silence(duration);
   }
 
-  static concat(tapes) {
-    return new Tape(1, config.sampleRate).concat(tapes);
+  static concat(...args) {
+    return Tape.prototype.concat.apply(new Tape(1, config.sampleRate), args);
   }
 
-  static mix(tapes, method) {
-    let newInstance = new Tape(1, config.sampleRate);
+  static mix(...args) {
+    let newInstance = Tape.prototype.mix.apply(new Tape(1, config.sampleRate), args);
 
-    if (Array.isArray(tapes)) {
-      tapes.forEach((tape) => {
-        newInstance = newInstance.mix(tape, method);
-      });
-      if (1 < newInstance.tracks.length) {
-        newInstance.tracks.shift(); // remove first empty track
-      }
+    if (1 < newInstance.tracks.length) {
+      newInstance.tracks.shift(); // remove first empty track
     }
 
     return newInstance;
@@ -124,11 +119,13 @@ class Tape {
   }
 
   concat(...tapes) {
+    tapes = Array.prototype.concat.apply([], tapes);
+
     let newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
     newInstance.tracks = this.tracks.map(track => track.clone());
 
-    Array.prototype.concat.apply([], tapes).forEach((tape) => {
+    tapes.forEach((tape) => {
       if (!(tape instanceof Tape && 0 < tape.duration)) {
         return;
       }
@@ -196,6 +193,10 @@ class Tape {
     }
     beginTime = Math.max(0, beginTime);
 
+    if (typeof tape === "function") {
+      tape = tape(this.slice(beginTime, duration));
+    }
+
     return this.slice(0, beginTime).concat(tape, this.slice(beginTime + duration));
   }
 
@@ -212,12 +213,22 @@ class Tape {
     return tapes;
   }
 
-  mix(tape, method) {
+  mix(...tapes) {
+    tapes = Array.prototype.concat.apply([], tapes);
+
+    let method;
+    if (typeof tapes[tapes.length - 1] === "string") {
+      method = tapes.pop();
+    }
+
     let newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
     newInstance.tracks = this.tracks.map(track => track.clone());
 
-    if (tape instanceof Tape) {
+    tapes.forEach((tape) => {
+      if (!(tape instanceof Tape && 0 < tape.duration)) {
+        return;
+      }
       if (newInstance._numberOfChannels < tape._numberOfChannels) {
         newInstance._numberOfChannels = tape._numberOfChannels;
       }
@@ -228,12 +239,15 @@ class Tape {
         tape = util.adjustDuration(tape, newInstance.duration, method);
       }
       newInstance.tracks = newInstance.tracks.concat(tape.tracks);
-    }
+    });
 
     return newInstance;
   }
 
-  render() {
+  render(...args) {
+    if (config.render[config.renderName]) {
+      return config.render[config.renderName].apply(this, [ this.toJSON() ].concat(args));
+    }
     return new Promise((resolve, reject) => {
       reject(new Error("not implemented"));
     });
@@ -244,12 +258,21 @@ class Tape {
   }
 
   toJSON() {
-    return {
-      tracks: this.tracks.map(track => track.toJSON()),
-      duration: this.duration,
-      sampleRate: this.sampleRate,
-      numberOfChannels: this.numberOfChannels,
-    };
+    let tracks = this.tracks.map(track => track.toJSON());
+    let duration = this.duration;
+    let sampleRate = this.sampleRate;
+    let numberOfChannels = this.numberOfChannels;
+
+    let usePan = tracks.some((fragments) => {
+      return fragments.some((fragment) => {
+        return fragment.pan !== 0;
+      });
+    });
+    if (usePan) {
+      numberOfChannels = Math.max(2, numberOfChannels);
+    }
+
+    return { tracks, duration, sampleRate, numberOfChannels };
   }
 }
 

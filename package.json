@@ -1,7 +1,7 @@
 {
   "name": "ciseaux",
   "description": "utility to chop an audio buffer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "nao yonamine <mohayonao@gmail.com>",
   "bugs": {
     "url": "https://github.com/mohayonao/ciseaux/issues"
@@ -32,19 +32,19 @@
     "buffer"
   ],
   "licenses": "MIT",
-  "main": "lib/index.js",
+  "main": "./index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/mohayonao/ciseaux.git"
   },
   "scripts": {
     "build": "npm run build-to5 && npm run build-browser && npm run build-minify",
-    "build-browser": "browserify lib --standalone Ciseaux --outfile build/ciseaux.js",
+    "build-browser": "browserify ./index.js --standalone Ciseaux --outfile build/ciseaux.js",
     "build-minify": "uglifyjs build/ciseaux.js -m -r self -o build/ciseaux.min.js",
     "build-to5": "babel src --out-dir lib",
     "cover": "babel-node node_modules/.bin/isparta cover --report text --report html --report lcov node_modules/.bin/_mocha",
     "lint": "jshint src test --reporter node_modules/jshint-stylish/stylish.js",
     "test": "mocha --require espower-babel/guess",
-    "travis": "npm run lint && npm run test"
+    "travis": "npm run lint && npm run cover"
   }
 }
