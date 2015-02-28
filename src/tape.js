@@ -178,6 +178,11 @@ class Tape {
     duration = Math.max(0, util.toNumber(duration));
 
     let this_duration = this.duration;
+
+    if (this_duration === 0) {
+      return this.silence(duration);
+    }
+
     let loopCount = Math.floor(duration / this_duration);
     let remain = duration % this_duration;
 
@@ -294,6 +299,9 @@ util.adjustNumberOfTracks = (tape, numberOfTracks) => {
 };
 
 util.adjustDuration = (tape, duration, method) => {
+  if (tape.duration === 0) {
+    return tape.silence(duration);
+  }
   switch (method) {
   case "fill":
     return tape.fill(duration);

@@ -570,6 +570,20 @@ describe("Tape", () => {
         ]);
       });
     });
+    context("from empty", () => {
+      it("works", () => {
+        let tape = new Tape(2, 8000);
+
+        let result = tape.fill(10);
+
+        assert(result !== tape);
+
+        result = pickEach(result.toJSON().tracks[0], [ "data", "beginTime", "endTime" ]);
+        assert.deepEqual(result, [
+          { data: 0, beginTime: 0, endTime: 10 },
+        ]);
+      });
+    });
   });
   describe("#replace(beginTime: number, duration: number, tape: Tape): Tape", () => {
     context("without arguments", () => {
