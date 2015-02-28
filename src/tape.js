@@ -118,8 +118,8 @@ class Tape {
     return newInstance;
   }
 
-  concat(...tapes) {
-    tapes = Array.prototype.concat.apply([], tapes);
+  concat(..._tapes) {
+    let tapes = Array.prototype.concat.apply([], _tapes);
 
     let newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
@@ -213,8 +213,8 @@ class Tape {
     return tapes;
   }
 
-  mix(...tapes) {
-    tapes = Array.prototype.concat.apply([], tapes);
+  mix(..._tapes) {
+    let tapes = Array.prototype.concat.apply([], _tapes);
 
     let method;
     if (typeof tapes[tapes.length - 1] === "string") {
