@@ -1,30 +1,16 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Ciseaux = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-module.exports = require("./lib/build-api")(require("./lib/web-audio-tape"));
+require("./lib/web-audio-tape").use();
 
-},{"./lib/build-api":2,"./lib/web-audio-tape":10}],2:[function(require,module,exports){
-"use strict";
+module.exports = require("./lib");
 
-var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
-
-var Sequence = _interopRequire(require("./sequence"));
-
-var Tape = _interopRequire(require("./tape"));
-
-var silence = Tape.silence;
-var concat = Tape.concat;
-var mix = Tape.mix;
-
-module.exports = function (Tape) {
-  return { Sequence: Sequence, Tape: Tape, silence: silence, concat: concat, mix: mix };
-};
-},{"./sequence":7,"./tape":8}],3:[function(require,module,exports){
+},{"./lib":4,"./lib/web-audio-tape":10}],2:[function(require,module,exports){
 "use strict";
 
 module.exports = {
   sampleRate: 0,
-  renderName: "",
-  render: {} };
-},{}],4:[function(require,module,exports){
+  create: null,
+  render: null };
+},{}],3:[function(require,module,exports){
 "use strict";
 
 var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
@@ -108,7 +94,23 @@ var Fragment = (function () {
 })();
 
 module.exports = Fragment;
-},{}],5:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
+"use strict";
+
+var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
+var Sequence = _interopRequire(require("./sequence"));
+
+var _tape = require("./tape");
+
+var Tape = _interopRequire(_tape);
+
+var TapeConstructor = _tape.TapeConstructor;
+var silence = Tape.silence;
+var concat = Tape.concat;
+var mix = Tape.mix;
+module.exports = { Sequence: Sequence, Tape: TapeConstructor, silence: silence, concat: concat, mix: mix };
+},{"./sequence":7,"./tape":8}],5:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -542,12 +544,14 @@ var Sequence = (function () {
 })();
 
 module.exports = Sequence;
-},{"./config":3,"./tape":8}],8:[function(require,module,exports){
+},{"./config":2,"./tape":8}],8:[function(require,module,exports){
 "use strict";
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
 var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
+
+var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
@@ -557,7 +561,21 @@ var config = _interopRequire(require("./config"));
 
 var util = {};
 
-var Tape = (function () {
+var TapeConstructor = exports.TapeConstructor = function TapeConstructor() {
+  for (var _len = arguments.length, _args = Array(_len), _key = 0; _key < _len; _key++) {
+    _args[_key] = arguments[_key];
+  }
+
+  _classCallCheck(this, TapeConstructor);
+
+  var args = _args.slice();
+  if (config.create) {
+    return config.create.apply(null, args);
+  }
+  return new Tape(args[0], args[1]);
+};
+
+var Tape = (function (TapeConstructor) {
   function Tape(numberOfChannels, sampleRate) {
     _classCallCheck(this, Tape);
 
@@ -565,6 +583,8 @@ var Tape = (function () {
     this._numberOfChannels = Math.max(1, numberOfChannels | 0);
     this._sampleRate = Math.max(0, sampleRate | 0) || config.sampleRate;
   }
+
+  _inherits(Tape, TapeConstructor);
 
   _prototypeProperties(Tape, {
     silence: {
@@ -951,8 +971,8 @@ var Tape = (function () {
           args[_key] = arguments[_key];
         }
 
-        if (config.render[config.renderName]) {
-          return config.render[config.renderName].apply(this, [this.toJSON()].concat(args));
+        if (config.render) {
+          return config.render.apply(null, [this.toJSON()].concat(args));
         }
         return new Promise(function (resolve, reject) {
           reject(new Error("not implemented"));
@@ -992,7 +1012,7 @@ var Tape = (function () {
   });
 
   return Tape;
-})();
+})(TapeConstructor);
 
 util.toNumber = function (num) {
   return +num || 0;
@@ -1032,10 +1052,13 @@ util.adjustDuration = function (tape, duration, method) {
   }
 };
 
-module.exports = Tape;
+exports["default"] = Tape;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
 /* subclass responsibility */
-},{"./config":3,"./track":9}],9:[function(require,module,exports){
+},{"./config":2,"./track":9}],9:[function(require,module,exports){
 "use strict";
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
@@ -1207,7 +1230,7 @@ var Track = (function () {
 })();
 
 module.exports = Track;
-},{"./fragment":4}],10:[function(require,module,exports){
+},{"./fragment":3}],10:[function(require,module,exports){
 "use strict";
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
@@ -1261,32 +1284,38 @@ var WebAudioTape = (function (Tape) {
   return WebAudioTape;
 })(Tape);
 
-config.renderName = "WebAudioRender";
-config.render.WebAudioRender = function (tape, audioContext) {
-  var numberOfChannels = arguments[2] === undefined ? 0 : arguments[2];
+exports["default"] = WebAudioTape;
+var use = exports.use = function () {
+  config.create = function (audioBuffer) {
+    return new WebAudioTape(audioBuffer);
+  };
+  config.render = function (tape, audioContext) {
+    var numberOfChannels = arguments[2] === undefined ? 0 : arguments[2];
 
-  numberOfChannels = Math.max(numberOfChannels, tape.numberOfChannels);
+    numberOfChannels = Math.max(numberOfChannels, tape.numberOfChannels);
 
-  tape.numberOfChannels = numberOfChannels;
+    tape.numberOfChannels = numberOfChannels;
 
-  return renderer.render(tape).then(function (audioData) {
-    var length = Math.floor(tape.duration * tape.sampleRate);
-    var audioBuffer = audioContext.createBuffer(numberOfChannels, length, tape.sampleRate);
+    return renderer.render(tape).then(function (audioData) {
+      var length = Math.floor(tape.duration * tape.sampleRate);
+      var audioBuffer = audioContext.createBuffer(numberOfChannels, length, tape.sampleRate);
 
-    if (audioBuffer.copyToChannel) {
-      for (var i = 0; i < numberOfChannels; i++) {
-        audioBuffer.copyToChannel(audioData[i], i);
+      if (audioBuffer.copyToChannel) {
+        for (var i = 0; i < numberOfChannels; i++) {
+          audioBuffer.copyToChannel(audioData[i], i);
+        }
+      } else {
+        for (var i = 0; i < numberOfChannels; i++) {
+          audioBuffer.getChannelData(i).set(audioData[i]);
+        }
       }
-    } else {
-      for (var i = 0; i < numberOfChannels; i++) {
-        audioBuffer.getChannelData(i).set(audioData[i]);
-      }
-    }
 
-    return audioBuffer;
-  });
+      return audioBuffer;
+    });
+  };
 };
-
-module.exports = WebAudioTape;
-},{"./config":3,"./fragment":4,"./renderer":6,"./tape":8}]},{},[1])(1)
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+},{"./config":2,"./fragment":3,"./renderer":6,"./tape":8}]},{},[1])(1)
 });

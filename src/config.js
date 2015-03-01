@@ -2,6 +2,6 @@
 
 export default {
   sampleRate: 0,
-  renderName: "",
-  render: {},
+  create: null,
+  render: null,
 };

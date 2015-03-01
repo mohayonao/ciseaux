@@ -26,28 +26,32 @@ class WebAudioTape extends Tape {
   }
 }
 
-config.renderName = "WebAudioRender";
-config.render.WebAudioRender = (tape, audioContext, numberOfChannels = 0) => {
-  numberOfChannels = Math.max(numberOfChannels, tape.numberOfChannels);
-
-  tape.numberOfChannels = numberOfChannels;
-
-  return renderer.render(tape).then((audioData) => {
-    let length = Math.floor(tape.duration * tape.sampleRate);
-    let audioBuffer = audioContext.createBuffer(numberOfChannels, length, tape.sampleRate);
-
-    if (audioBuffer.copyToChannel) {
-      for (let i = 0; i < numberOfChannels; i++) {
-        audioBuffer.copyToChannel(audioData[i], i);
-      }
-    } else {
-      for (let i = 0; i < numberOfChannels; i++) {
-        audioBuffer.getChannelData(i).set(audioData[i]);
-      }
-    }
-
-    return audioBuffer;
-  });
-};
-
 export default WebAudioTape;
+
+export var use = () => {
+  config.create = (audioBuffer) => {
+    return new WebAudioTape(audioBuffer);
+  };
+  config.render = (tape, audioContext, numberOfChannels = 0) => {
+    numberOfChannels = Math.max(numberOfChannels, tape.numberOfChannels);
+
+    tape.numberOfChannels = numberOfChannels;
+
+    return renderer.render(tape).then((audioData) => {
+      let length = Math.floor(tape.duration * tape.sampleRate);
+      let audioBuffer = audioContext.createBuffer(numberOfChannels, length, tape.sampleRate);
+
+      if (audioBuffer.copyToChannel) {
+        for (let i = 0; i < numberOfChannels; i++) {
+          audioBuffer.copyToChannel(audioData[i], i);
+        }
+      } else {
+        for (let i = 0; i < numberOfChannels; i++) {
+          audioBuffer.getChannelData(i).set(audioData[i]);
+        }
+      }
+
+      return audioBuffer;
+    });
+  };
+};

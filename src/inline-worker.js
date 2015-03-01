@@ -22,7 +22,7 @@ class InlineWorker {
       }, 0);
     };
 
-    setTimeout(function() {
+    setTimeout(() => {
       func.call(self);
     }, 0);
   }

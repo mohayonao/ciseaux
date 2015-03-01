@@ -1,1 +1,3 @@
-module.exports = require("./lib/build-api")(require("./lib/web-audio-tape"));
+require("./lib/web-audio-tape").use();
+
+module.exports = require("./lib");
