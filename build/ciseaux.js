@@ -502,17 +502,33 @@ var getInstrumentFrom = function (instruments, ch, tape) {
 };
 
 var Sequence = (function () {
-  function Sequence(pattern, durationPerStep) {
+  function Sequence(arg0, durationPerStep) {
     _classCallCheck(this, Sequence);
 
-    this.pattern = pattern;
+    if (typeof arg0 === "string") {
+      this.pattern = arg0;
+      this.instruments = null;
+    } else {
+      this.pattern = "";
+      this.instruments = arg0 || {};
+    }
     this.durationPerStep = durationPerStep;
   }
 
   _prototypeProperties(Sequence, null, {
     apply: {
-      value: function apply(instruments) {
-        var pattern = String(this.pattern);
+      value: function apply(arg1) {
+        var pattern = null;
+        var instruments = null;
+
+        if (this.instruments === null) {
+          pattern = this.pattern;
+          instruments = arg1 || {};
+        } else {
+          pattern = String(arg1);
+          instruments = this.instruments;
+        }
+
         var durationPerStep = Math.max(0, +this.durationPerStep || 0);
 
         if (!(pattern.length && durationPerStep && instruments && typeof instruments === "object")) {
