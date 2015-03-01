@@ -17,13 +17,29 @@ let getInstrumentFrom = (instruments, ch, tape) => {
 };
 
 class Sequence {
-  constructor(pattern, durationPerStep) {
-    this.pattern = pattern;
+  constructor(arg0, durationPerStep) {
+    if (typeof arg0 === "string") {
+      this.pattern = arg0;
+      this.instruments = null;
+    } else {
+      this.pattern = "";
+      this.instruments = arg0 || {};
+    }
     this.durationPerStep = durationPerStep;
   }
 
-  apply(instruments) {
-    let pattern = String(this.pattern);
+  apply(arg1) {
+    let pattern = null;
+    let instruments = null;
+
+    if (this.instruments === null) {
+      pattern = this.pattern;
+      instruments = arg1 || {};
+    } else {
+      pattern = String(arg1);
+      instruments = this.instruments;
+    }
+
     let durationPerStep = Math.max(0, +this.durationPerStep || 0);
 
     if (!(pattern.length && durationPerStep && instruments && typeof instruments === "object")) {
