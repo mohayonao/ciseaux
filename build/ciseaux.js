@@ -101,15 +101,12 @@ var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["defau
 
 var Sequence = _interopRequire(require("./sequence"));
 
-var _tape = require("./tape");
+var Tape = _interopRequire(require("./tape"));
 
-var Tape = _interopRequire(_tape);
-
-var TapeConstructor = _tape.TapeConstructor;
 var silence = Tape.silence;
 var concat = Tape.concat;
 var mix = Tape.mix;
-module.exports = { Sequence: Sequence, Tape: TapeConstructor, silence: silence, concat: concat, mix: mix };
+module.exports = { Sequence: Sequence, Tape: Tape, silence: silence, concat: concat, mix: mix };
 },{"./sequence":7,"./tape":8}],5:[function(require,module,exports){
 (function (global){
 "use strict";
@@ -484,7 +481,11 @@ var _prototypeProperties = function (child, staticProps, instanceProps) { if (st
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
-var Tape = _interopRequire(require("./tape"));
+var _tape = require("./tape");
+
+var Tape = _interopRequire(_tape);
+
+var TapeConstructor = _tape.TapeConstructor;
 
 var config = _interopRequire(require("./config"));
 
@@ -549,7 +550,7 @@ var Sequence = (function () {
           }
 
           return tape;
-        }, new Tape(1, config.sampleRate));
+        }, new TapeConstructor(1, config.sampleRate));
       },
       writable: true,
       configurable: true
@@ -565,9 +566,9 @@ module.exports = Sequence;
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
-var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
-
 var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
+
+var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
@@ -577,35 +578,25 @@ var config = _interopRequire(require("./config"));
 
 var util = {};
 
-var TapeConstructor = exports.TapeConstructor = function TapeConstructor() {
-  for (var _len = arguments.length, _args = Array(_len), _key = 0; _key < _len; _key++) {
-    _args[_key] = arguments[_key];
-  }
+var Tape = (function () {
+  function Tape() {
+    for (var _len = arguments.length, _args = Array(_len), _key = 0; _key < _len; _key++) {
+      _args[_key] = arguments[_key];
+    }
 
-  _classCallCheck(this, TapeConstructor);
-
-  var args = _args.slice();
-  if (config.create) {
-    return config.create.apply(null, args);
-  }
-  return new Tape(args[0], args[1]);
-};
-
-var Tape = (function (TapeConstructor) {
-  function Tape(numberOfChannels, sampleRate) {
     _classCallCheck(this, Tape);
 
-    this.tracks = [new Track()];
-    this._numberOfChannels = Math.max(1, numberOfChannels | 0);
-    this._sampleRate = Math.max(0, sampleRate | 0) || config.sampleRate;
+    var args = _args.slice();
+    if (config.create) {
+      return config.create.apply(null, args);
+    }
+    return new TapeConstructor(args[0], args[1]);
   }
-
-  _inherits(Tape, TapeConstructor);
 
   _prototypeProperties(Tape, {
     silence: {
       value: function silence(duration) {
-        return new Tape(1, config.sampleRate).silence(duration);
+        return new TapeConstructor(1, config.sampleRate).silence(duration);
       },
       writable: true,
       configurable: true
@@ -616,7 +607,7 @@ var Tape = (function (TapeConstructor) {
           args[_key] = arguments[_key];
         }
 
-        return Tape.prototype.concat.apply(new Tape(1, config.sampleRate), args);
+        return Tape.prototype.concat.apply(new TapeConstructor(1, config.sampleRate), args);
       },
       writable: true,
       configurable: true
@@ -627,7 +618,7 @@ var Tape = (function (TapeConstructor) {
           args[_key] = arguments[_key];
         }
 
-        var newInstance = Tape.prototype.mix.apply(new Tape(1, config.sampleRate), args);
+        var newInstance = Tape.prototype.mix.apply(new TapeConstructor(1, config.sampleRate), args);
 
         if (1 < newInstance.tracks.length) {
           newInstance.tracks.shift(); // remove first empty track
@@ -685,7 +676,7 @@ var Tape = (function (TapeConstructor) {
 
         gain = util.toNumber(gain);
 
-        var newInstance = new Tape(this.numberOfChannels, this.sampleRate);
+        var newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
 
         newInstance.tracks = this.tracks.map(function (track) {
           return track.gain(gain);
@@ -712,7 +703,7 @@ var Tape = (function (TapeConstructor) {
 
         pan = util.toNumber(pan);
 
-        var newInstance = new Tape(this.numberOfChannels, this.sampleRate);
+        var newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
 
         newInstance.tracks = this.tracks.map(function (track) {
           return track.pan(pan);
@@ -725,7 +716,7 @@ var Tape = (function (TapeConstructor) {
     },
     reverse: {
       value: function reverse() {
-        var newInstance = new Tape(this.numberOfChannels, this.sampleRate);
+        var newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
 
         newInstance.tracks = this.tracks.map(function (track) {
           return track.reverse();
@@ -742,7 +733,7 @@ var Tape = (function (TapeConstructor) {
 
         rate = Math.max(0, util.toNumber(rate));
 
-        var newInstance = new Tape(this.numberOfChannels, this.sampleRate);
+        var newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
 
         newInstance.tracks = this.tracks.map(function (track) {
           return track.pitch(rate);
@@ -759,7 +750,7 @@ var Tape = (function (TapeConstructor) {
 
         rate = Math.max(0, util.toNumber(rate));
 
-        var newInstance = new Tape(this.numberOfChannels, this.sampleRate);
+        var newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
 
         newInstance.tracks = this.tracks.map(function (track) {
           return track.stretch(rate);
@@ -772,7 +763,7 @@ var Tape = (function (TapeConstructor) {
     },
     clone: {
       value: function clone() {
-        var newInstance = new Tape(this.numberOfChannels, this.sampleRate);
+        var newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
 
         newInstance.tracks = this.tracks.map(function (track) {
           return track.clone();
@@ -789,7 +780,7 @@ var Tape = (function (TapeConstructor) {
 
         duration = Math.max(0, util.toNumber(duration));
 
-        var newInstance = new Tape(this.numberOfChannels, this.sampleRate);
+        var newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
 
         if (0 < duration) {
           newInstance.tracks = this.tracks.map(function () {
@@ -810,14 +801,14 @@ var Tape = (function (TapeConstructor) {
 
         var tapes = Array.prototype.concat.apply([], _tapes);
 
-        var newInstance = new Tape(this.numberOfChannels, this.sampleRate);
+        var newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
 
         newInstance.tracks = this.tracks.map(function (track) {
           return track.clone();
         });
 
         tapes.forEach(function (tape) {
-          if (!(tape instanceof Tape && 0 < tape.duration)) {
+          if (!(tape instanceof TapeConstructor && 0 < tape.duration)) {
             return;
           }
           if (newInstance._numberOfChannels < tape._numberOfChannels) {
@@ -852,7 +843,7 @@ var Tape = (function (TapeConstructor) {
         }
         beginTime = Math.max(0, beginTime);
 
-        var newInstance = new Tape(this.numberOfChannels, this.sampleRate);
+        var newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
 
         newInstance.tracks = this.tracks.map(function (track) {
           return track.slice(beginTime, duration);
@@ -875,7 +866,7 @@ var Tape = (function (TapeConstructor) {
           tapes[i] = this;
         }
 
-        return new Tape(this.numberOfChannels, this.sampleRate).concat(tapes);
+        return new TapeConstructor(this.numberOfChannels, this.sampleRate).concat(tapes);
       },
       writable: true,
       configurable: true
@@ -954,14 +945,14 @@ var Tape = (function (TapeConstructor) {
           method = tapes.pop();
         }
 
-        var newInstance = new Tape(this.numberOfChannels, this.sampleRate);
+        var newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
 
         newInstance.tracks = this.tracks.map(function (track) {
           return track.clone();
         });
 
         tapes.forEach(function (tape) {
-          if (!(tape instanceof Tape && 0 < tape.duration)) {
+          if (!(tape instanceof TapeConstructor && 0 < tape.duration)) {
             return;
           }
           if (newInstance._numberOfChannels < tape._numberOfChannels) {
@@ -1028,14 +1019,30 @@ var Tape = (function (TapeConstructor) {
   });
 
   return Tape;
-})(TapeConstructor);
+})();
+
+exports["default"] = Tape;
+
+var TapeConstructor = exports.TapeConstructor = (function (Tape) {
+  function TapeConstructor(numberOfChannels, sampleRate) {
+    _classCallCheck(this, TapeConstructor);
+
+    this.tracks = [new Track()];
+    this._numberOfChannels = Math.max(1, numberOfChannels | 0);
+    this._sampleRate = Math.max(0, sampleRate | 0) || config.sampleRate;
+  }
+
+  _inherits(TapeConstructor, Tape);
+
+  return TapeConstructor;
+})(Tape);
 
 util.toNumber = function (num) {
   return +num || 0;
 };
 
 util.adjustNumberOfTracks = function (tape, numberOfTracks) {
-  var newInstance = new Tape(tape.numberOfChannels, tape.sampleRate);
+  var newInstance = new TapeConstructor(tape.numberOfChannels, tape.sampleRate);
 
   newInstance.tracks = tape.tracks.map(function (track) {
     return track.clone();
@@ -1067,8 +1074,6 @@ util.adjustDuration = function (tape, duration, method) {
       return tape.concat(tape.silence(duration - tape.duration));
   }
 };
-
-exports["default"] = Tape;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -1259,7 +1264,7 @@ var _inherits = function (subClass, superClass) { if (typeof superClass !== "fun
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
-var Tape = _interopRequire(require("./tape"));
+var TapeConstructor = require("./tape").TapeConstructor;
 
 var Fragment = _interopRequire(require("./fragment"));
 
@@ -1267,7 +1272,7 @@ var config = _interopRequire(require("./config"));
 
 var renderer = _interopRequire(require("./renderer"));
 
-var WebAudioTape = (function (Tape) {
+var WebAudioTape = (function (TapeConstructor) {
   function WebAudioTape(audioBuffer) {
     _classCallCheck(this, WebAudioTape);
 
@@ -1285,7 +1290,7 @@ var WebAudioTape = (function (Tape) {
     config.sampleRate = audioBuffer.sampleRate;
   }
 
-  _inherits(WebAudioTape, Tape);
+  _inherits(WebAudioTape, TapeConstructor);
 
   _prototypeProperties(WebAudioTape, null, {
     dispose: {
@@ -1298,7 +1303,7 @@ var WebAudioTape = (function (Tape) {
   });
 
   return WebAudioTape;
-})(Tape);
+})(TapeConstructor);
 
 exports["default"] = WebAudioTape;
 var use = exports.use = function () {
