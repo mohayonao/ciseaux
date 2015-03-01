@@ -5,7 +5,7 @@ import sinon from "sinon";
 import config from "../src/config";
 import renderer from "../src/renderer";
 import Tape from "../src/tape";
-import WebAudioTape from "../src/web-audio-tape";
+import WebAudioTape, {use} from "../src/web-audio-tape";
 
 describe("WebAudioTape", () => {
   let audioContext;
@@ -28,34 +28,6 @@ describe("WebAudioTape", () => {
       renderer.transfer.restore();
     });
   });
-  describe("render(audioContext: AudioContext, numberOfChannels: number): Promise<AudioBuffer>", () => {
-    let config$renderName;
-    beforeEach(() => {
-      config$renderName = config.renderName;
-    });
-    afterEach(() => {
-      config.renderName = config$renderName;
-    });
-    it("works", () => {
-      config.renderName = "WebAudioRender";
-
-      let buffer = audioContext.createBuffer(2, 100, 44100);
-
-      buffer.getChannelData(0).set([ 0, 1, 2, 3, 4 ]);
-      buffer.getChannelData(1).set([ 5, 6, 7, 8, 9 ]);
-
-      let tape = new WebAudioTape(buffer).slice(0);
-
-      return tape.render(audioContext).then((audioBuffer) => {
-        assert(audioBuffer !== buffer);
-        assert(audioBuffer instanceof global.AudioBuffer);
-        assert.deepEqual(audioBuffer.getChannelData(0), buffer.getChannelData(0));
-        assert.deepEqual(audioBuffer.getChannelData(1), buffer.getChannelData(1));
-      }, () => {
-        throw new Error("NOT REACHED");
-      });
-    });
-  });
   describe("#dispose(): void", () => {
     it("works", () => {
       sinon.spy(renderer, "dispose");
@@ -68,6 +40,37 @@ describe("WebAudioTape", () => {
       assert(renderer.dispose.calledOnce);
 
       renderer.dispose.restore();
+    });
+  });
+  describe("use", () => {
+    before(use);
+    describe("create(audioBuffer: AudioBuffer): WebAudioTape", () => {
+      it("should return a WebAudioTape", () => {
+        let buffer = audioContext.createBuffer(2, 100, 44100);
+        let tape = config.create(buffer);
+
+        assert(tape instanceof WebAudioTape);
+        assert(tape instanceof Tape);
+      });
+    });
+    describe("render(audioContext: AudioContext, numberOfChannels: number): Promise<AudioBuffer>", () => {
+      it("works", () => {
+        let buffer = audioContext.createBuffer(2, 100, 44100);
+
+        buffer.getChannelData(0).set([ 0, 1, 2, 3, 4 ]);
+        buffer.getChannelData(1).set([ 5, 6, 7, 8, 9 ]);
+
+        let tape = new WebAudioTape(buffer).slice(0);
+
+        return tape.render(audioContext).then((audioBuffer) => {
+          assert(audioBuffer !== buffer);
+          assert(audioBuffer instanceof global.AudioBuffer);
+          assert.deepEqual(audioBuffer.getChannelData(0), buffer.getChannelData(0));
+          assert.deepEqual(audioBuffer.getChannelData(1), buffer.getChannelData(1));
+        }, () => {
+          throw new Error("NOT REACHED");
+        });
+      });
     });
   });
 });

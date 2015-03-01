@@ -5,7 +5,17 @@ import config from "./config";
 
 let util = {};
 
-class Tape {
+export class TapeConstructor {
+  constructor(..._args) {
+    let args = _args.slice();
+    if (config.create) {
+      return config.create.apply(null, args);
+    }
+    return new Tape(args[0], args[1]);
+  }
+}
+
+class Tape extends TapeConstructor {
   static silence(duration) {
     return new Tape(1, config.sampleRate).silence(duration);
   }
@@ -250,8 +260,8 @@ class Tape {
   }
 
   render(...args) {
-    if (config.render[config.renderName]) {
-      return config.render[config.renderName].apply(this, [ this.toJSON() ].concat(args));
+    if (config.render) {
+      return config.render.apply(null, [ this.toJSON() ].concat(args));
     }
     return new Promise((resolve, reject) => {
       reject(new Error("not implemented"));

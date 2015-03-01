@@ -1,9 +1,10 @@
 "use strict";
 
 import assert from "power-assert";
+import sinon from "sinon";
 import config from "../src/config";
 import Fragment from "../src/fragment";
-import Tape from "../src/tape";
+import Tape, {TapeConstructor} from "../src/tape";
 
 let pickEach = (list, keys) => {
   return list.map((data) => {
@@ -25,12 +26,53 @@ let createTapeFromList = (list) => {
   return tape;
 };
 
+describe("TapeConstructor", () => {
+  describe("constructor(...args: any)", () => {
+    class TestTape extends TapeConstructor {
+      constructor() {}
+    }
+
+    let config$create;
+    before(() => {
+      config$create = config.create;
+    });
+    after(() => {
+      config.create = config$create;
+    });
+    context("exists create", () => {
+      it("works", () => {
+        config.create = sinon.spy(() => {
+          return new TestTape();
+        });
+
+        let tape = new TapeConstructor(2, 8000);
+
+        assert(tape instanceof TestTape);
+        assert(tape instanceof TapeConstructor);
+        assert(config.create.calledOnce);
+        assert(config.create.calledWith(2, 8000));
+      });
+    });
+    context("not exists create", () => {
+      it("works", () => {
+        config.create = null;
+
+        let tape = new TapeConstructor(2, 8000);
+
+        assert(tape instanceof Tape);
+        assert(tape instanceof TapeConstructor);
+      });
+    });
+  });
+});
+
 describe("Tape", () => {
   describe(".silence(duration: number): Tape", () => {
     it("should create a silence Tape", () => {
       let silence = Tape.silence(20);
 
       assert(silence instanceof Tape);
+      assert(silence instanceof TapeConstructor);
       assert(silence.duration === 20);
     });
   });
@@ -42,6 +84,7 @@ describe("Tape", () => {
       let result = Tape.concat([ tape1, tape2, null ]);
 
       assert(result instanceof Tape);
+      assert(result instanceof TapeConstructor);
       assert(result.duration === 40);
       assert(result.numberOfChannels === 2);
 
@@ -62,6 +105,7 @@ describe("Tape", () => {
       let result = Tape.mix([ tape1, tape2 ]);
 
       assert(result instanceof Tape);
+      assert(result instanceof TapeConstructor);
       assert(result.duration === 40);
       assert(result.numberOfChannels === 2);
       assert(result.numberOfTracks === 2);
@@ -105,6 +149,7 @@ describe("Tape", () => {
       let tape = new Tape(2, 8000);
 
       assert(tape instanceof Tape);
+      assert(tape instanceof TapeConstructor);
       assert(tape.duration === 0);
     });
   });
@@ -924,22 +969,20 @@ describe("Tape", () => {
     });
   });
   describe("#render(): Promise", () => {
-    let config$renderName;
+    let config$render;
     before(() => {
-      config.render.SpyRender = (...args) => {
-        return new Promise((resolve) => {
-          resolve(args);
-        });
-      };
-      config$renderName = config.renderName;
+      config$render = config.render;
     });
     after(() => {
-      config.renderName = config$renderName;
-      delete config.render.SpyRender;
+      config.render = config$render;
     });
     context("exists render", () => {
       it("works", () => {
-        config.renderName = "SpyRender";
+        config.render = (...args) => {
+          return new Promise((resolve) => {
+            resolve(args);
+          });
+        };
 
         let tape = new Tape(2, 8000);
 
@@ -952,7 +995,7 @@ describe("Tape", () => {
     });
     context("not exists render", () => {
       it("works", () => {
-        config.renderName = "";
+        config.render = null;
 
         let tape = new Tape(2, 8000);
 
