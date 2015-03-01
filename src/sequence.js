@@ -1,6 +1,6 @@
 "use strict";
 
-import Tape from "./tape";
+import Tape, {TapeConstructor} from "./tape";
 import config from "./config";
 
 let getInstrumentFrom = (instruments, ch, tape) => {
@@ -60,7 +60,7 @@ class Sequence {
       }
 
       return tape;
-    }, new Tape(1, config.sampleRate));
+    }, new TapeConstructor(1, config.sampleRate));
   }
 }
 

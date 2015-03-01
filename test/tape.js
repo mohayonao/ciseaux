@@ -19,72 +19,32 @@ let pickEach = (list, keys) => {
 };
 
 let createTapeFromList = (list) => {
-  let tape = new Tape(2, 8000);
+  let tape = new TapeConstructor(2, 8000);
   list.forEach((data) => {
     tape.tracks[0].addFragment(new Fragment(data, 0, 10));
   });
   return tape;
 };
 
-describe("TapeConstructor", () => {
-  describe("constructor(...args: any)", () => {
-    class TestTape extends TapeConstructor {
-      constructor() {}
-    }
-
-    let config$create;
-    before(() => {
-      config$create = config.create;
-    });
-    after(() => {
-      config.create = config$create;
-    });
-    context("exists create", () => {
-      it("works", () => {
-        config.create = sinon.spy(() => {
-          return new TestTape();
-        });
-
-        let tape = new TapeConstructor(2, 8000);
-
-        assert(tape instanceof TestTape);
-        assert(tape instanceof TapeConstructor);
-        assert(config.create.calledOnce);
-        assert(config.create.calledWith(2, 8000));
-      });
-    });
-    context("not exists create", () => {
-      it("works", () => {
-        config.create = null;
-
-        let tape = new TapeConstructor(2, 8000);
-
-        assert(tape instanceof Tape);
-        assert(tape instanceof TapeConstructor);
-      });
-    });
-  });
-});
-
-describe("Tape", () => {
-  describe(".silence(duration: number): Tape", () => {
-    it("should create a silence Tape", () => {
+describe.only("Tape", () => {
+  describe(".silence(duration: number): TapeConstructor", () => {
+    it("should create a silence TapeConstructor", () => {
       let silence = Tape.silence(20);
 
-      assert(silence instanceof Tape);
       assert(silence instanceof TapeConstructor);
+      assert(silence instanceof Tape);
       assert(silence.duration === 20);
     });
   });
-  describe(".concat(tapes: Tape[]): Tape", () => {
-    it("should create a new Tape", () => {
+  describe(".concat(tapes: TapeConstructor[]): TapeConstructor", () => {
+    it("should create a new TapeConstructor", () => {
       let tape1 = createTapeFromList([ 0, 1 ]);
       let tape2 = createTapeFromList([ 2, 3 ]);
 
       let result = Tape.concat([ tape1, tape2, null ]);
 
-      assert(result instanceof Tape);
       assert(result instanceof TapeConstructor);
+      assert(result instanceof Tape);
       assert(result.duration === 40);
       assert(result.numberOfChannels === 2);
 
@@ -97,15 +57,15 @@ describe("Tape", () => {
       ]);
     });
   });
-  describe(".mix(tapes: Tape[], method: string): Tape", () => {
+  describe(".mix(tapes: TapeConstructor[], method: string): TapeConstructor", () => {
     it("works", () => {
       let tape1 = createTapeFromList([ 0, 1 ]);
       let tape2 = createTapeFromList([ 2, 3, 4, 5 ]);
 
       let result = Tape.mix([ tape1, tape2 ]);
 
-      assert(result instanceof Tape);
       assert(result instanceof TapeConstructor);
+      assert(result instanceof Tape);
       assert(result.duration === 40);
       assert(result.numberOfChannels === 2);
       assert(result.numberOfTracks === 2);
@@ -127,10 +87,10 @@ describe("Tape", () => {
         { data: 5, beginTime: 0, endTime: 10 },
       ], "tracks[1]");
     });
-    it("works when given not Tape[]", () => {
+    it("works when given not TapeConstructor[]", () => {
       let result = Tape.mix([ null ]);
 
-      assert(result instanceof Tape);
+      assert(result instanceof TapeConstructor);
       assert(result.duration === 0);
       assert(result.numberOfChannels === 1);
       assert(result.numberOfTracks === 1);
@@ -138,31 +98,59 @@ describe("Tape", () => {
     it("works when given invalid argument", () => {
       let result = Tape.mix();
 
-      assert(result instanceof Tape);
+      assert(result instanceof TapeConstructor);
       assert(result.duration === 0);
       assert(result.numberOfChannels === 1);
       assert(result.numberOfTracks === 1);
     });
   });
-  describe("constructor(numberOfChannels: number, sampleRate: number)", () => {
-    it("should create a new Tape", () => {
-      let tape = new Tape(2, 8000);
+  describe("constructor(...args: any)", () => {
+    class TestTape extends Tape {
+      constructor() {}
+    }
 
-      assert(tape instanceof Tape);
-      assert(tape instanceof TapeConstructor);
-      assert(tape.duration === 0);
+    let config$create;
+    before(() => {
+      config$create = config.create;
+    });
+    after(() => {
+      config.create = config$create;
+    });
+    context("exists create", () => {
+      it("works", () => {
+        config.create = sinon.spy(() => {
+          return new TestTape();
+        });
+
+        let tape = new Tape(2, 8000);
+
+        assert(tape instanceof TestTape);
+        assert(tape instanceof Tape);
+        assert(config.create.calledOnce);
+        assert(config.create.calledWith(2, 8000));
+      });
+    });
+    context("not exists create", () => {
+      it("works", () => {
+        config.create = null;
+
+        let tape = new Tape(2, 8000);
+
+        assert(tape instanceof TapeConstructor);
+        assert(tape instanceof Tape);
+      });
     });
   });
   describe("#sampleRate: number [getter]", () => {
     it("works", () => {
-      let tape = new Tape(2, 8000);
+      let tape = new TapeConstructor(2, 8000);
 
       assert(tape.sampleRate === 8000);
     });
   });
   describe("#length: number [getter]", () => {
     it("should be calculated according to duration", () => {
-      let tape = new Tape(2, 8000);
+      let tape = new TapeConstructor(2, 8000);
 
       tape = tape.concat(createTapeFromList([ 0, 1 ]));
       assert(tape.length === 8000 * 20, "[ 0, 1 ]");
@@ -173,7 +161,7 @@ describe("Tape", () => {
   });
   describe("#duration: number [getter]", () => {
     it("should be calculated according to tracks", () => {
-      let tape = new Tape(2, 8000);
+      let tape = new TapeConstructor(2, 8000);
 
       tape = tape.concat(createTapeFromList([ 0, 1 ]));
       assert(tape.duration === 20, "[ 0, 1 ]");
@@ -184,21 +172,21 @@ describe("Tape", () => {
   });
   describe("#numberOfChannels: number [getter]", () => {
     it("work", () => {
-      let tape = new Tape(2, 8000);
+      let tape = new TapeConstructor(2, 8000);
 
       assert(tape.numberOfChannels === 2);
     });
   });
   describe("#numberOfTracks: number [getter]", () => {
     it("works", () => {
-      let tape = new Tape(2, 8000);
+      let tape = new TapeConstructor(2, 8000);
 
       assert(tape.numberOfTracks === 1);
     });
   });
-  describe("#gain(gain: number): Tape", () => {
+  describe("#gain(gain: number): TapeConstructor", () => {
     it("works", () => {
-      let tape = new Tape(2, 8000);
+      let tape = new TapeConstructor(2, 8000);
 
       tape = tape.concat(createTapeFromList([ 0, 1 ])).gain(0.5);
       tape = tape.concat(createTapeFromList([ 2, 3 ])).gain(0.5);
@@ -221,9 +209,9 @@ describe("Tape", () => {
       ]);
     });
   });
-  describe("#pan(pan: number): Tape", () => {
+  describe("#pan(pan: number): TapeConstructor", () => {
     it("works", () => {
-      let tape = new Tape(2, 8000);
+      let tape = new TapeConstructor(2, 8000);
 
       tape = tape.concat(createTapeFromList([ 0, 1 ])).pan(0.25);
       tape = tape.concat(createTapeFromList([ 2, 3 ])).pan(0.25);
@@ -246,9 +234,9 @@ describe("Tape", () => {
       ]);
     });
   });
-  describe("#reverse(): Tape", () => {
+  describe("#reverse(): TapeConstructor", () => {
     it("works", () => {
-      let tape = new Tape(2, 8000);
+      let tape = new TapeConstructor(2, 8000);
 
       tape = tape.concat(createTapeFromList([ 0, 1 ])).reverse(); // 1 0
       tape = tape.concat(createTapeFromList([ 2, 3 ])).reverse(); // 3 2 0 1
@@ -271,9 +259,9 @@ describe("Tape", () => {
       ]);
     });
   });
-  describe("#pitch(rate: number): Tape", () => {
+  describe("#pitch(rate: number): TapeConstructor", () => {
     it("works", () => {
-      let tape = new Tape(2, 8000);
+      let tape = new TapeConstructor(2, 8000);
 
       tape = tape.concat(createTapeFromList([ 0, 1 ])).pitch(0.25);
       tape = tape.concat(createTapeFromList([ 2, 3 ])).pitch(0.5);
@@ -296,9 +284,9 @@ describe("Tape", () => {
       ]);
     });
   });
-  describe("#stretch(rate: number): Tape", () => {
+  describe("#stretch(rate: number): TapeConstructor", () => {
     it("works", () => {
-      let tape = new Tape(2, 8000);
+      let tape = new TapeConstructor(2, 8000);
 
       tape = tape.concat(createTapeFromList([ 0, 1 ])).stretch(0.25);
       tape = tape.concat(createTapeFromList([ 2, 3 ])).stretch(0.5);
@@ -321,7 +309,7 @@ describe("Tape", () => {
       ]);
     });
   });
-  describe("#clone(): Tape", () => {
+  describe("#clone(): TapeConstructor", () => {
     it("works", () => {
       let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
 
@@ -331,9 +319,9 @@ describe("Tape", () => {
       assert.deepEqual(result.toJSON(), tape.toJSON());
     });
   });
-  describe("#silence(duration: number): Tape", () => {
+  describe("#silence(duration: number): TapeConstructor", () => {
     it("works", () => {
-      let tape = new Tape(2, 8000);
+      let tape = new TapeConstructor(2, 8000);
 
       tape = tape.concat(tape.silence());
       tape = tape.concat(tape.silence(1));
@@ -346,10 +334,10 @@ describe("Tape", () => {
       ]);
     });
   });
-  describe("#concat: (...tapes: Tape): Tape", () => {
+  describe("#concat: (...tapes: TapeConstructor): TapeConstructor", () => {
     context("same numberOfTracks", () => {
       it("works", () => {
-        let tape = new Tape(2, 8000);
+        let tape = new TapeConstructor(2, 8000);
 
         let result = tape.concat(
           createTapeFromList([ 0, 1 ]),
@@ -419,7 +407,7 @@ describe("Tape", () => {
       });
     });
   });
-  describe("#slice(beginTime: number, duration: number): Tape", () => {
+  describe("#slice(beginTime: number, duration: number): TapeConstructor", () => {
     context("without arguments", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
@@ -496,7 +484,7 @@ describe("Tape", () => {
       });
     });
   });
-  describe("#loop(n: number): Tape", () => {
+  describe("#loop(n: number): TapeConstructor", () => {
     context("without arguments", () => {
       it("works (default n = 2)", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4 ]);
@@ -562,7 +550,7 @@ describe("Tape", () => {
       });
     });
   });
-  describe("#fill(duration: number): Tape", () => {
+  describe("#fill(duration: number): TapeConstructor", () => {
     context("without arguments", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4 ]);
@@ -617,7 +605,7 @@ describe("Tape", () => {
     });
     context("from empty", () => {
       it("works", () => {
-        let tape = new Tape(2, 8000);
+        let tape = new TapeConstructor(2, 8000);
 
         let result = tape.fill(10);
 
@@ -630,7 +618,7 @@ describe("Tape", () => {
       });
     });
   });
-  describe("#replace(beginTime: number, duration: number, tape: Tape): Tape", () => {
+  describe("#replace(beginTime: number, duration: number, tape: TapeConstructor): TapeConstructor", () => {
     context("without arguments", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
@@ -740,7 +728,7 @@ describe("Tape", () => {
       });
     });
   });
-  describe("#split(n: number): Tape[]", () => {
+  describe("#split(n: number): TapeConstructor[]", () => {
     context("withtout arguments", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
@@ -818,7 +806,7 @@ describe("Tape", () => {
       });
     });
   });
-  describe("#mix(tape: Tape, method:string): Tape", () => {
+  describe("#mix(tape: TapeConstructor, method:string): TapeConstructor", () => {
     context("without arguments", () => {
       let tape1 = createTapeFromList([ 0, 1, 2, 3 ]);
 
@@ -984,7 +972,7 @@ describe("Tape", () => {
           });
         };
 
-        let tape = new Tape(2, 8000);
+        let tape = new TapeConstructor(2, 8000);
 
         return tape.render("arg1", "arg2", "...args").then((args) => {
           assert.deepEqual(args, [ tape.toJSON(), "arg1", "arg2", "...args" ]);
@@ -997,7 +985,7 @@ describe("Tape", () => {
       it("works", () => {
         config.render = null;
 
-        let tape = new Tape(2, 8000);
+        let tape = new TapeConstructor(2, 8000);
 
         return tape.render().then(() => {
           throw new Error("NOT REACHED");
@@ -1009,7 +997,7 @@ describe("Tape", () => {
   });
   describe("#dispose(): void", () => {
     it("works", () => {
-      let tape = new Tape(2, 8000);
+      let tape = new TapeConstructor(2, 8000);
 
       tape.dispose();
 
@@ -1018,7 +1006,7 @@ describe("Tape", () => {
   });
   describe("#toJSON(): JSON", () => {
     it("works", () => {
-      let tape = new Tape(2, 8000);
+      let tape = new TapeConstructor(2, 8000);
 
       assert.deepEqual(tape.toJSON(), {
         tracks: [ [] ],
@@ -1026,6 +1014,18 @@ describe("Tape", () => {
         sampleRate: 8000,
         numberOfChannels: 2,
       });
+    });
+  });
+});
+
+describe("TapeConstructor", () => {
+  describe("constructor(numberOfChannels: number, sampleRate: number)", () => {
+    it("should create a new TapeConstructor", () => {
+      let tape = new TapeConstructor(2, 8000);
+
+      assert(tape instanceof TapeConstructor);
+      assert(tape instanceof Tape);
+      assert(tape.duration === 0);
     });
   });
 });

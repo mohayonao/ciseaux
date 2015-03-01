@@ -1,11 +1,11 @@
 "use strict";
 
-import Tape from "./tape";
+import {TapeConstructor} from "./tape";
 import Fragment from "./fragment";
 import config from "./config";
 import renderer from "./renderer";
 
-class WebAudioTape extends Tape {
+class WebAudioTape extends TapeConstructor {
   constructor(audioBuffer) {
     super(audioBuffer.numberOfChannels, audioBuffer.sampleRate);
 
