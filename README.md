@@ -101,8 +101,8 @@ tape = tape1.replace(2, 3, function(tape) {
 
 #### gain
 ```js
-tape = Ciseaux.concat(tape1.split(128).map(function(tape, i) {
-  return tape.gain(i / 128);
+tape = Ciseaux.concat(tape1.split(25).map(function(tape, i) {
+  return tape.gain(i / 25);
 }));
 ```
 
@@ -115,27 +115,27 @@ tape = Ciseaux.concat(tape1.split(25).map(function(tape, i) {
 
 #### pitch
 ```js
-tape = Ciseaux.concat(tape1.split(128).map(function(tape, i) {
-  return tape.pitch(i / 128 + 0.5);
+tape = Ciseaux.concat(tape1.split(25).map(function(tape, i) {
+  return tape.pitch(i / 50 + 0.75);
 }));
 ```
 
 #### mix
 ```js
-tape = tape1.mix(tape2.gain(0.5), "fill");
+tape = tape1.mix(tape2.gain(0.5), "fill").fill(30);
 ```
 
 #### stutter
 ```js
-tape = Ciseaux.concat(tape2.split(64).map(function(tape) {
-  return tape.loop(4).pitch(2);
-}));
+tape = Ciseaux.concat(tape2.split(16).map(function(tape) {
+  return tape.loop(4).pitch(1.5);
+})).fill(30);
 ```
 
 #### phase
 ```js
 tape = Ciseaux.mix([ 1, 0.95 ].map(function(rate) {
-  return tape2.pitch(rate).fill(10);
+  return tape2.pitch(rate).fill(30);
 }));
 ```
 
@@ -143,13 +143,13 @@ tape = Ciseaux.mix([ 1, 0.95 ].map(function(rate) {
 ```js
 tape = Ciseaux.concat(tape1.split(32).map(function(tape, index) {
   return index % 2 ? tape2.pitch(2).fill(tape.duration) : tape;
-}));
+})).fill(30);
 ```
 
 #### concrete
 ```js
-tape = Ciseaux.mix([ -3, 0, 4, 7 ].map(function(midi) {
-  return tape1.pitch(Math.pow(2, midi * 1/12)).fill(10);
+tape = Ciseaux.mix([ -12, -7, -3, 0, 4 ].map(function(midi) {
+  return tape1.pitch(Math.pow(2, midi * 1/12)).fill(30);
 })).gain(0.5);
 ```
 
@@ -165,7 +165,7 @@ tape = new Ciseaux.Sequence("a bdacbba babfeg", 0.2)
     e: tape2.split(16)[4].pitch(0.25),
     f: tape2.split(16)[5].pitch(4).gain(0.1),
     g: tape3.pitch(32),
-  }).loop(4);
+  }).fill(30);
 ```
 
 ## :scissors: License
