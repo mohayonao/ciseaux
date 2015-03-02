@@ -178,7 +178,7 @@ module.exports = InlineWorker;
 var self = {};
 
 function render() {
-  self.repository = {};
+  self.repository = [];
 
   self.onmessage = function (e) {
     switch (e.data.type) {
@@ -188,9 +188,7 @@ function render() {
         });
         break;
       case "dispose":
-        e.data.ids.forEach(function (id) {
-          delete self.repository[id];
-        });
+        delete self.repository[e.data.data];
         break;
       case "render":
         self.startRendering(e.data.tape, e.data.callbackId);
@@ -198,13 +196,11 @@ function render() {
     }
   };
 
-  self.toBuffer = function (array) {
-    return array.buffer;
-  };
-
   self.startRendering = function (tape, callbackId) {
     var destination = self.allocData(tape);
-    var buffers = destination.map(self.toBuffer);
+    var buffers = destination.map(function (array) {
+      return array.buffer;
+    });
 
     self.render(tape, destination);
 
@@ -223,12 +219,12 @@ function render() {
   };
 
   self.render = function (tape, destination) {
-    for (var ch = 0; ch < tape.tracks.length; ch++) {
-      self.renderChannel(ch, tape.tracks[ch], destination, tape.sampleRate);
+    for (var i = 0; i < tape.tracks.length; i++) {
+      self.renderTrack(i, tape.tracks[i], destination, tape.sampleRate);
     }
   };
 
-  self.renderChannel = function (ch, fragments, destination, sampleRate) {
+  self.renderTrack = function (trackNum, fragments, destination, sampleRate) {
     var usePan = fragments.some(function (fragment) {
       return fragment.pan !== 0;
     });
@@ -261,7 +257,7 @@ function render() {
       }
       **/
 
-      var canSimpleCopy = ch === 0 && pitch === 1 && !usePan && fragment.gain === 1 && !fragment.reverse && srcCh <= dstCh && srcSub[0].length === dstSub[0].length;
+      var canSimpleCopy = trackNum === 0 && pitch === 1 && !usePan && fragment.gain === 1 && !fragment.reverse && srcCh <= dstCh && srcSub[0].length === dstSub[0].length;
 
       if (canSimpleCopy) {
         self.mix[srcSub.length + "->" + dstSub.length](srcSub, dstSub);
@@ -478,8 +474,8 @@ module.exports = {
     worker.postMessage({ type: "transfer", data: data, buffers: buffers }, buffers);
     return data;
   },
-  dispose: function (ids) {
-    worker.postMessage({ type: "dispose", ids: ids });
+  dispose: function (data) {
+    worker.postMessage({ type: "dispose", data: data });
   },
   render: function (tape) {
     var callbackId = __callbacks.length;
@@ -1315,7 +1311,7 @@ var WebAudioTape = (function (TapeConstructor) {
   _prototypeProperties(WebAudioTape, null, {
     dispose: {
       value: function dispose() {
-        renderer.dispose([this._data]);
+        renderer.dispose(this._data);
       },
       writable: true,
       configurable: true

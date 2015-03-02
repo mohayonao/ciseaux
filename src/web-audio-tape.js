@@ -22,7 +22,7 @@ class WebAudioTape extends TapeConstructor {
   }
 
   dispose() {
-    renderer.dispose([ this._data ]);
+    renderer.dispose(this._data);
   }
 }
 

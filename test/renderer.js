@@ -26,13 +26,13 @@ describe("renderer", () => {
       transferred = result;
     });
   });
-  describe("dispose(ids: number[]): void", () => {
+  describe("dispose(data: number): void", () => {
     it("should delete audioData from the repository", (done) => {
       if (transferred === null) {
         return done();
       }
 
-      renderer.dispose([ transferred ]);
+      renderer.dispose(transferred);
 
       setTimeout(() => {
         assert(renderer.util.repository[transferred] === undefined);

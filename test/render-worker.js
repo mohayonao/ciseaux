@@ -9,13 +9,6 @@ let closeTo = (actual, expected, delta) => {
 };
 
 describe("render", () => {
-  describe("toBuffer(array: TypedArray): AudioBuffer", () => {
-    it("works", () => {
-      let f32 = new Float32Array(10);
-
-      assert(util.toBuffer(f32) === f32.buffer);
-    });
-  });
   describe("allocData(tape: object): Float32Array[]", () => {
     it("works", () => {
       let tape = {
