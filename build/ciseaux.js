@@ -3,7 +3,7 @@ require("./lib/web-audio-tape").use();
 
 module.exports = require("./lib");
 
-},{"./lib":4,"./lib/web-audio-tape":10}],2:[function(require,module,exports){
+},{"./lib":4,"./lib/web-audio-tape":11}],2:[function(require,module,exports){
 "use strict";
 
 module.exports = {
@@ -107,7 +107,7 @@ var silence = Tape.silence;
 var concat = Tape.concat;
 var mix = Tape.mix;
 module.exports = { Sequence: Sequence, Tape: Tape, silence: silence, concat: concat, mix: mix };
-},{"./sequence":7,"./tape":8}],5:[function(require,module,exports){
+},{"./sequence":8,"./tape":9}],5:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -166,12 +166,18 @@ module.exports = InlineWorker;
 },{}],6:[function(require,module,exports){
 "use strict";
 
-var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+/* jshint esnext: false */
 
-var InlineWorker = _interopRequire(require("./inline-worker"));
+/**
+  CAUTION!!!!
+  This file is used in WebWorker.
+  So, must write with ES5, not use ES6.
+  You need attention not to be traspiled by babel.
+*/
 
 var self = {};
-var worker = new InlineWorker(function () {
+
+function render() {
   self.repository = {};
 
   self.onmessage = function (e) {
@@ -187,25 +193,25 @@ var worker = new InlineWorker(function () {
         });
         break;
       case "render":
-        self.start_rendering(e.data.tape, e.data.callbackId);
+        self.startRendering(e.data.tape, e.data.callbackId);
         break;
     }
   };
 
-  self.to_buffer = function (array) {
+  self.toBuffer = function (array) {
     return array.buffer;
   };
 
-  self.start_rendering = function (tape, callback_id) {
-    var destination = self.alloc_data(tape);
-    var buffers = destination.map(self.to_buffer);
+  self.startRendering = function (tape, callbackId) {
+    var destination = self.allocData(tape);
+    var buffers = destination.map(self.toBuffer);
 
     self.render(tape, destination);
 
-    self.postMessage({ callbackId: callback_id, buffers: buffers }, buffers);
+    self.postMessage({ callbackId: callbackId, buffers: buffers }, buffers);
   };
 
-  self.alloc_data = function (tape) {
+  self.allocData = function (tape) {
     var data = new Array(tape.numberOfChannels);
     var length = Math.floor(tape.duration * tape.sampleRate);
 
@@ -218,12 +224,12 @@ var worker = new InlineWorker(function () {
 
   self.render = function (tape, destination) {
     for (var ch = 0; ch < tape.tracks.length; ch++) {
-      self._render(ch, tape.tracks[ch], destination, tape.sampleRate);
+      self.renderChannel(ch, tape.tracks[ch], destination, tape.sampleRate);
     }
   };
 
-  self._render = function (ch, fragments, destination, samplerate) {
-    var use_pan = fragments.some(function (fragment) {
+  self.renderChannel = function (ch, fragments, destination, sampleRate) {
+    var usePan = fragments.some(function (fragment) {
       return fragment.pan !== 0;
     });
 
@@ -233,36 +239,36 @@ var worker = new InlineWorker(function () {
       var fragment = fragments[i];
       var source = self.repository[fragment.data];
       var duration = (fragment.endTime - fragment.beginTime) / fragment.pitch;
-      var length = Math.floor(duration * samplerate);
+      var length = Math.floor(duration * sampleRate);
 
       if (!source) {
         pos += length;
         continue;
       }
 
-      var begin = Math.floor(fragment.beginTime * samplerate);
-      var end = Math.floor(fragment.endTime * samplerate);
-      var src_ch = source.length;
-      var dst_ch = destination.length;
-      var src_sub = self.subarray(source, begin, end);
-      var dst_sub = self.subarray(destination, pos, pos + length);
+      var begin = Math.floor(fragment.beginTime * sampleRate);
+      var end = Math.floor(fragment.endTime * sampleRate);
+      var srcCh = source.length;
+      var dstCh = destination.length;
+      var srcSub = self.subarray(source, begin, end);
+      var dstSub = self.subarray(destination, pos, pos + length);
       var pitch = fragment.pitch;
 
       /** TODO: implements
       if (fragment.stretch) {
-        src_sub = self.stretch(src_sub, length);
+        srcSub = self.stretch(srcSub, length);
         pitch = 1;
       }
       **/
 
-      var can_simple_copy = ch === 0 && pitch === 1 && !use_pan && fragment.gain === 1 && !fragment.reverse && src_ch <= dst_ch && src_sub[0].length === dst_sub[0].length;
+      var canSimpleCopy = ch === 0 && pitch === 1 && !usePan && fragment.gain === 1 && !fragment.reverse && srcCh <= dstCh && srcSub[0].length === dstSub[0].length;
 
-      if (can_simple_copy) {
-        self.mix["" + src_sub.length + "->" + dst_sub.length](src_sub, dst_sub);
+      if (canSimpleCopy) {
+        self.mix[srcSub.length + "->" + dstSub.length](srcSub, dstSub);
       } else {
-        self.process(src_sub, dst_sub, {
+        self.process(srcSub, dstSub, {
           gain: fragment.gain,
-          pan: use_pan ? Math.max(-1, Math.min(fragment.pan, +1)) : null,
+          pan: usePan ? Math.max(-1, Math.min(fragment.pan, +1)) : null,
           reverse: !!fragment.reverse
         });
       }
@@ -283,22 +289,22 @@ var worker = new InlineWorker(function () {
 
   self.process = function (src, dst, opts) {
     var samples = new Array(src.length);
-    var src_ch = src.length;
-    var dst_ch = dst.length;
-    var mix_ch;
-    var src_length = src[0].length;
-    var dst_length = dst[0].length;
-    var factor = (src_length - 1) / (dst_length - 1);
+    var srcCh = src.length;
+    var dstCh = dst.length;
+    var mixCh;
+    var srcLength = src[0].length;
+    var dstLength = dst[0].length;
+    var factor = (srcLength - 1) / (dstLength - 1);
     var index, step, ch, mix, l, r;
 
     if (opts.pan !== null) {
       l = Math.cos((opts.pan + 1) * 0.25 * Math.PI);
       r = Math.sin((opts.pan + 1) * 0.25 * Math.PI);
-      mix_ch = Math.max(src_ch, 2);
+      mixCh = Math.max(srcCh, 2);
     } else {
-      mix_ch = src_ch;
+      mixCh = srcCh;
     }
-    mix = self.mix1["" + mix_ch + "->" + dst_ch] || self.mix1.nop;
+    mix = self.mix1[mixCh + "->" + dstCh] || self.mix1.nop;
 
     if (opts.reverse) {
       index = dst[0].length - 1;
@@ -308,22 +314,22 @@ var worker = new InlineWorker(function () {
       step = +1;
     }
 
-    for (var i = 0; i < dst_length; i++, index += step) {
+    for (var i = 0; i < dstLength; i++, index += step) {
       var x0 = i * factor;
       var i0 = x0 | 0;
-      var i1 = Math.min(i0 + 1, src_length - 1);
+      var i1 = Math.min(i0 + 1, srcLength - 1);
 
-      for (ch = 0; ch < src_ch; ch++) {
+      for (ch = 0; ch < srcCh; ch++) {
         samples[ch] = src[ch][i0] + Math.abs(x0 - i0) * (src[ch][i1] - src[ch][i0]);
       }
 
       if (opts.pan !== null) {
-        samples = self.pan[src_ch](samples, l, r);
+        samples = self.pan[srcCh](samples, l, r);
       }
 
       var values = mix(samples);
 
-      for (ch = 0; ch < dst_ch; ch++) {
+      for (ch = 0; ch < dstCh; ch++) {
         dst[ch][index] += (values[ch] || 0) * opts.gain;
       }
     }
@@ -436,7 +442,21 @@ var worker = new InlineWorker(function () {
   self.mix1["6->4"] = function (src) {
     return [src[0] + 0.7071 * src[2], src[1] + 0.7071 * src[2], src[4], src[5]];
   };
-}, self);
+}
+
+render.self = render.util = self;
+
+module.exports = render;
+},{}],7:[function(require,module,exports){
+"use strict";
+
+var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
+var InlineWorker = _interopRequire(require("./inline-worker"));
+
+var render = _interopRequire(require("./render-worker"));
+
+var worker = new InlineWorker(render, render.self);
 
 var __callbacks = [];
 var __data = 1; // data 0 is reserved for silence
@@ -470,9 +490,9 @@ module.exports = {
       __callbacks[callbackId] = resolve;
     });
   },
-  util: self
+  util: render.util
 };
-},{"./inline-worker":5}],7:[function(require,module,exports){
+},{"./inline-worker":5,"./render-worker":6}],8:[function(require,module,exports){
 "use strict";
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
@@ -561,7 +581,7 @@ var Sequence = (function () {
 })();
 
 module.exports = Sequence;
-},{"./config":2,"./tape":8}],8:[function(require,module,exports){
+},{"./config":2,"./tape":9}],9:[function(require,module,exports){
 "use strict";
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
@@ -1079,7 +1099,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 /* subclass responsibility */
-},{"./config":2,"./track":9}],9:[function(require,module,exports){
+},{"./config":2,"./track":10}],10:[function(require,module,exports){
 "use strict";
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
@@ -1251,7 +1271,7 @@ var Track = (function () {
 })();
 
 module.exports = Track;
-},{"./fragment":3}],10:[function(require,module,exports){
+},{"./fragment":3}],11:[function(require,module,exports){
 "use strict";
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
@@ -1338,5 +1358,5 @@ var use = exports.use = function () {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-},{"./config":2,"./fragment":3,"./renderer":6,"./tape":8}]},{},[1])(1)
+},{"./config":2,"./fragment":3,"./renderer":7,"./tape":9}]},{},[1])(1)
 });
