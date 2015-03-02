@@ -6,6 +6,10 @@
 
 > JavaScript utility to chop an audio buffer, inspired from [youpy/scissor](https://github.com/youpy/scissor)
 
+## :scissors: Demo
+
+[Ciseaux - JavaScript utility to chop an audio buffer : online examples](http://mohayonao.github.io/ciseaux/)
+
 ## :scissors: Installation
 
 bower:
@@ -79,8 +83,6 @@ tape.render(audioContext).then(function(audioBuffer) {
 ```
 
 ## :scissors: Examples
-
-[ciseaux - online demo](http://mohayonao.github.io/ciseaux/)
 
 #### slice + concat
 ```js
@@ -167,6 +169,30 @@ tape = new Ciseaux.Sequence("a bdacbba babfeg", 0.2)
     g: tape3.pitch(32),
   }).fill(30);
 ```
+
+## :scissors: Developments
+
+```sh
+# Build : babel -> browserify -> uglify-js
+npm run build
+
+# Test : mocha + power-assert
+npm run test
+
+# Coverage : mocha + isparta
+npm run cover
+
+# Lint : jshint
+npm run lint
+```
+
+## :scissors: Contributing
+
+1. [Fork it!](https://github.com/mohayonao/ciseaux/fork)
+2. Create your feature branch: `git checkout -b my-new-feature`
+3. Commit your changes: `git commit -am 'Add some feature'`
+4. Push to the branch: `git push origin my-new-feature`
+5. Submit a pull request :D
 
 ## :scissors: License
 
