@@ -26,7 +26,7 @@ let createTapeFromList = (list) => {
   return tape;
 };
 
-describe.only("Tape", () => {
+describe("Tape", () => {
   describe(".silence(duration: number): TapeConstructor", () => {
     it("should create a silence TapeConstructor", () => {
       let silence = Tape.silence(20);
