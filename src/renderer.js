@@ -21,8 +21,8 @@ export default {
     worker.postMessage({ type: "transfer", data, buffers }, buffers);
     return data;
   },
-  dispose: (ids) => {
-    worker.postMessage({ type: "dispose", ids });
+  dispose: (data) => {
+    worker.postMessage({ type: "dispose", data });
   },
   render: (tape) => {
     let callbackId = __callbacks.length;
