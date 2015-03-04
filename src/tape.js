@@ -6,6 +6,14 @@ import config from "./config";
 let util = {};
 
 export default class Tape {
+  static from(..._args) {
+    let args = _args.slice();
+    if (config.from) {
+      return config.from.apply(null, args);
+    }
+    return Promise.resolve(new TapeConstructor(args[0], args[1]));
+  }
+
   static silence(duration) {
     return new TapeConstructor(1, config.sampleRate).silence(duration);
   }
