@@ -6,8 +6,7 @@ import config from "./config";
 let util = {};
 
 export class Tape {
-  static from(..._args) {
-    let args = _args.slice();
+  static from(...args) {
     if (config.from) {
       return config.from.apply(null, args);
     }
@@ -32,8 +31,7 @@ export class Tape {
     return newInstance;
   }
 
-  constructor(..._args) {
-    let args = _args.slice();
+  constructor(...args) {
     if (config.create) {
       return config.create.apply(null, args);
     }
@@ -128,8 +126,8 @@ export class Tape {
     return newInstance;
   }
 
-  concat(..._tapes) {
-    let tapes = Array.prototype.concat.apply([], _tapes);
+  concat(...tapes) {
+    tapes = Array.prototype.concat.apply([], tapes);
 
     let newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
 
@@ -228,8 +226,8 @@ export class Tape {
     return tapes;
   }
 
-  mix(..._tapes) {
-    let tapes = Array.prototype.concat.apply([], _tapes);
+  mix(...tapes) {
+    tapes = Array.prototype.concat.apply([], tapes);
 
     let method;
     if (typeof tapes[tapes.length - 1] === "string") {
