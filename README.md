@@ -2,6 +2,7 @@
 [![Build Status](http://img.shields.io/travis/mohayonao/ciseaux.svg?style=flat-square)](https://travis-ci.org/mohayonao/ciseaux)
 [![NPM Version](http://img.shields.io/npm/v/ciseaux.svg?style=flat-square)](https://www.npmjs.org/package/ciseaux)
 [![Bower](http://img.shields.io/bower/v/ciseaux.svg?style=flat-square)](http://bower.io/search/?q=ciseaux)
+[![Coverage Status](http://img.shields.io/coveralls/mohayonao/ciseaux.svg?style=flat-square)](https://coveralls.io/r/mohayonao/ciseaux?branch=master)
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](http://mohayonao.mit-license.org/)
 
 > JavaScript utility to chop an audio buffer, inspired from [youpy/scissor](https://github.com/youpy/scissor)
@@ -30,6 +31,7 @@ downloads:
 - [ciseaux.min.js](https://raw.githubusercontent.com/mohayonao/ciseaux/master/build/ciseaux.min.js)
 
 ## :scissors: API
+- `Ciseaux.from(src: ArrayBuffer|string, [audioContext: AudioContext]): Promise<Tape>`
 - `Ciseaux.silence(duration: number): Tape`
 - `Ciseaux.concat(...tapes: Tape): Tape`
 - `Ciseaux.mix(...tapes: Tape, [method='silence']): Tape`
@@ -62,10 +64,18 @@ downloads:
 - `dispose(): void`
 
 ### Ciseaux.Sequence
-- `constructor(pattern: string, durationPerStep: number)`
+Utility class for creating a sequence tape that is concatenated tapes
+
+- `constructor(...args: any)`
+  - `pattern: string`
+  - `durationPerStep: number|number[]`  
+  - `instruments: object`
 
 ### Instance methods
-- `apply(instruments: object): Tape`
+- `apply(...args: any): Tape`
+  - `pattern: string`
+  - `durationPerStep: number|number[]`  
+  - `instruments: object`
 
 ## :scissors: Usage
 ```js
@@ -150,24 +160,37 @@ tape = Ciseaux.concat(tape1.split(32).map(function(tape, index) {
 
 #### concrete
 ```js
-tape = Ciseaux.mix([ -12, -7, -3, 0, 4 ].map(function(midi) {
-  return tape1.pitch(Math.pow(2, midi * 1/12)).fill(30);
-})).gain(0.5);
+tape = Ciseaux.mix([ -12, -10, -7, -3, 0 ].map(function(midi) {
+  return tape1.pitch(Math.pow(2, midi * 1/12));
+}), "fill").gain(0.5).fill(30);
 ```
 
 #### sequence
 
 ```js
-tape = new Ciseaux.Sequence("a bdacbba babfeg", 0.2)
-  .apply({
-    a: tape1.split(16)[0],
-    b: tape1.split(16)[1],
-    c: tape1.split(16)[2],
-    d: tape1.split(16)[3].gain(0.15),
-    e: tape2.split(16)[4].pitch(0.25),
-    f: tape2.split(16)[5].pitch(4).gain(0.1),
-    g: tape3.pitch(32),
-  }).fill(30);
+tape = new Ciseaux.Sequence("a bdacbba babfeg", 0.2, {
+  a: tape1.split(16)[0],
+  b: tape1.split(16)[1],
+  c: tape1.split(16)[2],
+  d: tape1.split(16)[3].gain(0.15),
+  e: tape2.split(16)[4].pitch(0.25),
+  f: tape2.split(16)[5].pitch(4).gain(0.1),
+  g: tape3.pitch(32),
+}).apply().fill(30);
+```
+
+#### shuffled sequence
+
+```js
+tape = new Ciseaux.Sequence("a bdaabcaccbgabb", {
+  a: tape1.split(16)[4],
+  b: tape1.split(16)[1],
+  c: tape1.split(16)[2],
+  d: tape1.split(16)[3].gain(0.15),
+  e: tape2.split(16)[4].pitch(0.25),
+  f: tape2.split(16)[5].pitch(4).gain(0.1),
+  g: tape3.pitch(32),
+}).apply([ 2/3, 1/3 ].map(function(x) { return x * 0.3; })).fill(30);
 ```
 
 ## :scissors: Developments
