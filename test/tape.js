@@ -4,7 +4,7 @@ import assert from "power-assert";
 import sinon from "sinon";
 import config from "../src/config";
 import Fragment from "../src/fragment";
-import Tape, {TapeConstructor} from "../src/tape";
+import { Tape, TapeConstructor } from "../src/tape";
 
 let pickEach = (list, keys) => {
   return list.map((data) => {

@@ -1,6 +1,6 @@
 "use strict";
 
-import Tape, {TapeConstructor} from "./tape";
+import { Tape, TapeConstructor } from "./tape";
 import config from "./config";
 
 let getInstrumentFromRegExp = (instruments, ch) => {
@@ -32,7 +32,7 @@ let getInstrumentFrom = (instruments, ch, index, tape) => {
   return (instrument instanceof Tape) ? instrument : null;
 };
 
-class Sequence {
+export class Sequence {
   constructor(...args) {
     this.pattern = this.instruments = this.durationPerStep = null;
     args.forEach((arg) => {

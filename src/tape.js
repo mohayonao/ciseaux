@@ -5,7 +5,7 @@ import config from "./config";
 
 let util = {};
 
-export default class Tape {
+export class Tape {
   static from(..._args) {
     let args = _args.slice();
     if (config.from) {
@@ -331,3 +331,5 @@ util.adjustDuration = (tape, duration, method) => {
     return tape.concat(tape.silence(duration - tape.duration));
   }
 };
+
+export default Tape;

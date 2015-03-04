@@ -6,7 +6,7 @@ import XMLHttpRequest from "./assets/xml-http-request";
 import config from "../src/config";
 import renderer from "../src/renderer";
 import Tape from "../src/tape";
-import WebAudioTape, {use} from "../src/web-audio-tape";
+import WebAudioTape, { use } from "../src/web-audio-tape";
 
 global.XMLHttpRequest = XMLHttpRequest;
 

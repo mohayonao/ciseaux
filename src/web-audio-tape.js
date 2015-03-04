@@ -1,13 +1,13 @@
 "use strict";
 
-import Tape, {TapeConstructor} from "./tape";
+import { Tape, TapeConstructor } from "./tape";
 import Fragment from "./fragment";
 import config from "./config";
 import renderer from "./renderer";
 
 let _audioContext = null;
 
-class WebAudioTape extends TapeConstructor {
+export class WebAudioTape extends TapeConstructor {
   constructor(audioBuffer) {
     super(audioBuffer.numberOfChannels, audioBuffer.sampleRate);
 
@@ -30,7 +30,7 @@ class WebAudioTape extends TapeConstructor {
 
 export default WebAudioTape;
 
-export var use = () => {
+export let use = () => {
   let from = config.from = (src, audioContext = _audioContext) => {
     if (src instanceof Tape) {
       return Promise.resolve(src.clone());

@@ -1,6 +1,6 @@
 "use strict";
 
-class Fragment {
+export class Fragment {
   constructor(data, beginTime, endTime) {
     this.data = data;
     this.beginTime = beginTime;
