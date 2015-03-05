@@ -2,10 +2,13 @@
 
 import assert from "power-assert";
 import sinon from "sinon";
+import XMLHttpRequest from "./assets/xml-http-request";
 import config from "../src/config";
 import renderer from "../src/renderer";
 import Tape from "../src/tape";
-import WebAudioTape, {use} from "../src/web-audio-tape";
+import WebAudioTape, { use } from "../src/web-audio-tape";
+
+global.XMLHttpRequest = XMLHttpRequest;
 
 describe("WebAudioTape", () => {
   let audioContext;
@@ -44,6 +47,87 @@ describe("WebAudioTape", () => {
   });
   describe("use", () => {
     before(use);
+    describe("from", () => {
+      describe("(src: Tape): Promise<Tape>", () => {
+        it("works", () => {
+          let src = Tape.silence(20);
+          let result = config.from(src);
+
+          assert(result instanceof Promise);
+
+          return result.then((tape) => {
+            assert(tape instanceof Tape);
+            assert(tape !== src);
+          });
+        });
+      });
+      describe("(src: AudioBuffer): Promise<Tape>", () => {
+        it("works", () => {
+          let src = audioContext.createBuffer(2, 100, 44100);
+          let result = config.from(src);
+
+          assert(result instanceof Promise);
+
+          return result.then((tape) => {
+            assert(tape instanceof Tape);
+          });
+        });
+      });
+      describe("(src: ArrayBuffer): Promise<Tape>", () => {
+        it("works", () => {
+          let src = new Uint32Array([
+            1179011410,88,1163280727,544501094,16,131073,44100,176400,1048580,1635017060,8,0,0
+          ]).buffer;
+
+          let result = config.from(src);
+
+          assert(result instanceof Promise);
+
+          return result.then((tape) => {
+            assert(tape instanceof Tape);
+          });
+        });
+      });
+      describe("(src: string): Promise<Tape>", () => {
+        it("works", () => {
+          let src = "./sound/tape1.wav";
+
+          let result = config.from(src, audioContext);
+
+          assert(result instanceof Promise);
+
+          return result.then((tape) => {
+            assert(tape instanceof Tape);
+          });
+        });
+        it("not work", () => {
+          let src = "./sound/tape*.wav";
+
+          let result = config.from(src, audioContext);
+
+          assert(result instanceof Promise);
+
+          return result.then(() => {
+            assert(!"NOT REACHED");
+          }, (e) => {
+            assert(e.message === "Not Found");
+          });
+        });
+      });
+      describe("(src: INVALID): Promise<Tape>", () => {
+        it("works", () => {
+          let result = config.from(null, audioContext);
+
+          assert(result instanceof Promise);
+
+          return result.then(() => {
+            assert(!"NOT REACHED");
+          }, (e) => {
+            assert(e.message = "Invalid arguments");
+          });
+        });
+      });
+    });
     describe("create(audioBuffer: AudioBuffer): WebAudioTape", () => {
       it("should return a WebAudioTape", () => {
         let buffer = audioContext.createBuffer(2, 100, 44100);

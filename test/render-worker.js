@@ -2,7 +2,7 @@
 
 import assert from "power-assert";
 import renderer from "../src/renderer";
-import {util} from "../src/render-worker";
+import render from "../src/render-worker";
 
 let closeTo = (actual, expected, delta) => {
   return Math.abs(actual - expected) <= delta;
@@ -21,7 +21,7 @@ describe("render", () => {
         sampleRate: 8000,
         numberOfChannels: 2
       };
-      let data = util.allocData(tape);
+      let data = render.util.allocData(tape);
 
       assert(Array.isArray(data));
       assert(data.length === 2);
@@ -113,10 +113,10 @@ describe("render", () => {
         sampleRate: 8000,
         numberOfChannels: 2
       };
-      let destination = util.allocData(tape);
+      let destination = render.util.allocData(tape);
 
       setTimeout(function() {
-        util.render(tape, destination);
+        render.util.render(tape, destination);
 
         assert(closeTo(destination[0][   0], X * 1.00 + X * Math.cos(0.25 * 0.5 * Math.PI), 1e-6));
         assert(closeTo(destination[0][1000], X * 0.50 + X * Math.cos(0.25 * 0.5 * Math.PI), 1e-6));
@@ -138,7 +138,7 @@ describe("render", () => {
         new Float32Array([ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 ]),
       ];
 
-      let subarray = util.subarray(source, 2, 5);
+      let subarray = render.util.subarray(source, 2, 5);
 
       assert(Array.isArray(subarray));
       assert(subarray.length === 2);
@@ -159,7 +159,7 @@ describe("render", () => {
           new Float32Array(10),
         ];
 
-        util.process(src, dst, {
+        render.util.process(src, dst, {
           gain: 1,
           pan: null,
           reverse: false
@@ -187,7 +187,7 @@ describe("render", () => {
           new Float32Array(10),
         ];
 
-        util.process(src, dst, {
+        render.util.process(src, dst, {
           gain: 0.5,
           pan: null,
           reverse: false
@@ -218,7 +218,7 @@ describe("render", () => {
         let l = Math.cos(0.25 * Math.PI);
         let r = Math.sin(0.25 * Math.PI);
 
-        util.process(src, dst, {
+        render.util.process(src, dst, {
           gain: 1,
           pan: 0,
           reverse: false
@@ -256,7 +256,7 @@ describe("render", () => {
           new Float32Array(10),
         ];
 
-        util.process(src, dst, {
+        render.util.process(src, dst, {
           gain: 1,
           pan: null,
           reverse: true
@@ -284,7 +284,7 @@ describe("render", () => {
           new Float32Array(19),
         ];
 
-        util.process(src, dst, {
+        render.util.process(src, dst, {
           gain: 1,
           pan: null,
           reverse: false
@@ -320,7 +320,7 @@ describe("pan(src: number[], l: number, r: number): number[]", () => {
 
   it("1", () => {
     let src = [ C ];
-    let dst = util.pan[1](src, PAN_L, PAN_R);
+    let dst = render.util.pan[1](src, PAN_L, PAN_R);
 
     assert(dst.length === 2);
     assert(closeTo(dst[0], C * PAN_L, 1e-6));
@@ -328,7 +328,7 @@ describe("pan(src: number[], l: number, r: number): number[]", () => {
   });
   it("2", () => {
     let src = [ L, R ];
-    let dst = util.pan[2](src, PAN_L, PAN_R);
+    let dst = render.util.pan[2](src, PAN_L, PAN_R);
 
     assert(dst.length === 2);
     assert(closeTo(dst[0], (L + R) * 0.5 * PAN_L, 1e-6));
@@ -336,7 +336,7 @@ describe("pan(src: number[], l: number, r: number): number[]", () => {
   });
   it("4", () => {
     let src = [ L, R, SL, SR ];
-    let dst = util.pan[4](src, PAN_L, PAN_R);
+    let dst = render.util.pan[4](src, PAN_L, PAN_R);
 
     assert(dst.length === 4);
     assert(closeTo(dst[0], (L + R) * 0.5 * PAN_L, 1e-6));
@@ -346,7 +346,7 @@ describe("pan(src: number[], l: number, r: number): number[]", () => {
   });
   it("6", () => {
     let src = [ L, R, C, LFE, SL, SR ];
-    let dst = util.pan[6](src, PAN_L, PAN_R);
+    let dst = render.util.pan[6](src, PAN_L, PAN_R);
 
     assert(dst.length === 6);
     assert(closeTo(dst[0], (L + R) * 0.5 * PAN_L, 1e-6));
@@ -366,7 +366,7 @@ describe("mix(src: Float32Array[], dst: Float32Array[]): void", () => {
       new Float32Array(1),
     ];
 
-    util.mix["1->1"](src, dst);
+    render.util.mix["1->1"](src, dst);
 
     assert.deepEqual(dst[0], src[0]);
   });
@@ -379,7 +379,7 @@ describe("mix(src: Float32Array[], dst: Float32Array[]): void", () => {
       new Float32Array(1),
     ];
 
-    util.mix["1->2"](src, dst);
+    render.util.mix["1->2"](src, dst);
 
     assert.deepEqual(dst[0], src[0]);
     assert.deepEqual(dst[1], src[0]);
@@ -395,7 +395,7 @@ describe("mix(src: Float32Array[], dst: Float32Array[]): void", () => {
       new Float32Array(1),
     ];
 
-    util.mix["1->4"](src, dst);
+    render.util.mix["1->4"](src, dst);
 
     assert.deepEqual(dst[0], src[0]);
     assert.deepEqual(dst[1], src[0]);
@@ -415,7 +415,7 @@ describe("mix(src: Float32Array[], dst: Float32Array[]): void", () => {
       new Float32Array(1),
     ];
 
-    util.mix["1->6"](src, dst);
+    render.util.mix["1->6"](src, dst);
 
     assert.deepEqual(dst[0], new Float32Array(1));
     assert.deepEqual(dst[1], new Float32Array(1));
@@ -434,7 +434,7 @@ describe("mix(src: Float32Array[], dst: Float32Array[]): void", () => {
       new Float32Array(1),
     ];
 
-    util.mix["2->2"](src, dst);
+    render.util.mix["2->2"](src, dst);
 
     assert.deepEqual(dst[0], src[0]);
     assert.deepEqual(dst[1], src[1]);
@@ -451,7 +451,7 @@ describe("mix(src: Float32Array[], dst: Float32Array[]): void", () => {
       new Float32Array(1),
     ];
 
-    util.mix["2->4"](src, dst);
+    render.util.mix["2->4"](src, dst);
 
     assert.deepEqual(dst[0], src[0]);
     assert.deepEqual(dst[1], src[1]);
@@ -472,7 +472,7 @@ describe("mix(src: Float32Array[], dst: Float32Array[]): void", () => {
       new Float32Array(1),
     ];
 
-    util.mix["2->6"](src, dst);
+    render.util.mix["2->6"](src, dst);
 
     assert.deepEqual(dst[0], src[0]);
     assert.deepEqual(dst[1], src[1]);
@@ -496,7 +496,7 @@ it("4->4", () => {
     new Float32Array(1),
   ];
 
-  util.mix["4->4"](src, dst);
+  render.util.mix["4->4"](src, dst);
 
   assert.deepEqual(dst[0], src[0]);
   assert.deepEqual(dst[1], src[1]);
@@ -519,7 +519,7 @@ it("4->6", () => {
     new Float32Array(1),
   ];
 
-  util.mix["4->6"](src, dst);
+  render.util.mix["4->6"](src, dst);
 
   assert.deepEqual(dst[0], src[0]);
   assert.deepEqual(dst[1], src[1]);
@@ -546,7 +546,7 @@ it("6->6", () => {
     new Float32Array(1),
   ];
 
-  util.mix["6->6"](src, dst);
+  render.util.mix["6->6"](src, dst);
 
   assert.deepEqual(dst[0], src[0]);
   assert.deepEqual(dst[1], src[1]);
@@ -560,13 +560,13 @@ describe("mix1(src: number[]): number[]", () => {
 
   it("nop", () => {
     let src = [ L, C, R ];
-    let dst = util.mix1.nop(src);
+    let dst = render.util.mix1.nop(src);
 
     assert(src === dst);
   });
   it("1->2", () => {
     let src = [ C ];
-    let dst = util.mix1["1->2"](src);
+    let dst = render.util.mix1["1->2"](src);
 
     assert(dst.length === 2);
     assert(dst[0] === C);
@@ -574,7 +574,7 @@ describe("mix1(src: number[]): number[]", () => {
   });
   it("1->4", () => {
     let src = [ C ];
-    let dst = util.mix1["1->4"](src);
+    let dst = render.util.mix1["1->4"](src);
 
     assert(dst.length === 4);
     assert(dst[0] === C);
@@ -584,7 +584,7 @@ describe("mix1(src: number[]): number[]", () => {
   });
   it("1->6", () => {
     let src = [ C ];
-    let dst = util.mix1["1->6"](src);
+    let dst = render.util.mix1["1->6"](src);
 
     assert(dst.length === 6);
     assert(dst[0] === 0);
@@ -597,7 +597,7 @@ describe("mix1(src: number[]): number[]", () => {
   it("2->4", () => {
     let src = [ L, R ];
 
-    let dst = util.mix1["2->4"](src);
+    let dst = render.util.mix1["2->4"](src);
 
     assert(dst.length === 4);
     assert(dst[0] === L);
@@ -607,7 +607,7 @@ describe("mix1(src: number[]): number[]", () => {
   });
   it("2->6", () => {
     let src = [ L, R ];
-    let dst = util.mix1["2->6"](src);
+    let dst = render.util.mix1["2->6"](src);
 
     assert(dst.length === 6);
     assert(dst[0] === L);
@@ -619,7 +619,7 @@ describe("mix1(src: number[]): number[]", () => {
   });
   it("4->6", () => {
     let src = [ L, R, SL, SR ];
-    let dst = util.mix1["4->6"](src);
+    let dst = render.util.mix1["4->6"](src);
 
     assert(dst.length === 6);
     assert(dst[0] === L);
@@ -631,7 +631,7 @@ describe("mix1(src: number[]): number[]", () => {
   });
   it("2->1", () => {
     let src = [ L, R ];
-    let dst = util.mix1["2->1"](src);
+    let dst = render.util.mix1["2->1"](src);
 
     assert(dst.length === 1);
     assert(closeTo(dst[0], 0.5 * (L + R), 1e-6));
@@ -639,14 +639,14 @@ describe("mix1(src: number[]): number[]", () => {
   it("4->1", () => {
     let src = [ L, R, SL, SR ];
 
-    let dst = util.mix1["4->1"](src);
+    let dst = render.util.mix1["4->1"](src);
 
     assert(dst.length === 1);
     assert(closeTo(dst[0], 0.25 * (L + R + SL + SR), 1e-6));
   });
   it("6->1", () => {
     let src = [ L, R, C, LFE, SL, SR ];
-    let dst = util.mix1["6->1"](src);
+    let dst = render.util.mix1["6->1"](src);
 
     assert(dst.length === 1);
     assert(closeTo(dst[0], 0.7071 * (L + R) + C + 0.5 * (SL + SR), 1e-6));
@@ -654,7 +654,7 @@ describe("mix1(src: number[]): number[]", () => {
   it("4->2", () => {
     let src = [ L, R, SL, SR ];
 
-    let dst = util.mix1["4->2"](src);
+    let dst = render.util.mix1["4->2"](src);
 
     assert(dst.length === 2);
     assert(closeTo(dst[0], 0.5 * (L + SL), 1e-6));
@@ -662,7 +662,7 @@ describe("mix1(src: number[]): number[]", () => {
   });
   it("6->2", () => {
     let src = [ L, R, C, LFE, SL, SR ];
-    let dst = util.mix1["6->2"](src);
+    let dst = render.util.mix1["6->2"](src);
 
     assert(dst.length === 2);
     assert(closeTo(dst[0], L + 0.7071 * (C + SL), 1e-6));
@@ -670,7 +670,7 @@ describe("mix1(src: number[]): number[]", () => {
   });
   it("6->4", () => {
     let src = [ L, R, C, LFE, SL, SR ];
-    let dst = util.mix1["6->4"](src);
+    let dst = render.util.mix1["6->4"](src);
 
     assert(dst.length === 4);
     assert(closeTo(dst[0], L + 0.7071 * C, 1e-6));

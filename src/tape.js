@@ -5,7 +5,14 @@ import config from "./config";
 
 let util = {};
 
-export default class Tape {
+export class Tape {
+  static from(...args) {
+    if (config.from) {
+      return config.from.apply(null, args);
+    }
+    return Promise.resolve(new TapeConstructor(args[0], args[1]));
+  }
+
   static silence(duration) {
     return new TapeConstructor(1, config.sampleRate).silence(duration);
   }
@@ -24,8 +31,7 @@ export default class Tape {
     return newInstance;
   }
 
-  constructor(..._args) {
-    let args = _args.slice();
+  constructor(...args) {
     if (config.create) {
       return config.create.apply(null, args);
     }
@@ -120,8 +126,8 @@ export default class Tape {
     return newInstance;
   }
 
-  concat(..._tapes) {
-    let tapes = Array.prototype.concat.apply([], _tapes);
+  concat(...tapes) {
+    tapes = Array.prototype.concat.apply([], tapes);
 
     let newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
 
@@ -220,8 +226,8 @@ export default class Tape {
     return tapes;
   }
 
-  mix(..._tapes) {
-    let tapes = Array.prototype.concat.apply([], _tapes);
+  mix(...tapes) {
+    tapes = Array.prototype.concat.apply([], tapes);
 
     let method;
     if (typeof tapes[tapes.length - 1] === "string") {
@@ -323,3 +329,5 @@ util.adjustDuration = (tape, duration, method) => {
     return tape.concat(tape.silence(duration - tape.duration));
   }
 };
+
+export default Tape;

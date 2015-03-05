@@ -4,7 +4,7 @@ import assert from "power-assert";
 import sinon from "sinon";
 import config from "../src/config";
 import Fragment from "../src/fragment";
-import Tape, {TapeConstructor} from "../src/tape";
+import { Tape, TapeConstructor } from "../src/tape";
 
 let pickEach = (list, keys) => {
   return list.map((data) => {
@@ -26,7 +26,48 @@ let createTapeFromList = (list) => {
   return tape;
 };
 
+class TestTape extends Tape {
+  constructor() {}
+}
+
 describe("Tape", () => {
+  describe(".from(...args): Promise<Tape>", () => {
+    let config$from;
+    before(() => {
+      config$from = config.from;
+    });
+    after(() => {
+      config.from = config$from;
+    });
+    context("exists from", () => {
+      it("works", () => {
+        config.from = sinon.spy(() => {
+          return Promise.resolve(new TestTape());
+        });
+
+        let result = Tape.from();
+
+        assert(result instanceof Promise);
+
+        return result.then((tape) => {
+          assert(tape instanceof TestTape);
+        });
+      });
+    });
+    context("not exists from", () => {
+      it("works", () => {
+        config.from = null;
+
+        let result = Tape.from(2, 8000);
+
+        assert(result instanceof Promise);
+
+        return result.then((tape) => {
+          assert(tape instanceof Tape);
+        });
+      });
+    });
+  });
   describe(".silence(duration: number): TapeConstructor", () => {
     it("should create a silence TapeConstructor", () => {
       let silence = Tape.silence(20);
@@ -105,10 +146,6 @@ describe("Tape", () => {
     });
   });
   describe("constructor(...args: any)", () => {
-    class TestTape extends Tape {
-      constructor() {}
-    }
-
     let config$create;
     before(() => {
       config$create = config.create;

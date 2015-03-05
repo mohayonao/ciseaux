@@ -14,7 +14,7 @@ worker.onmessage = (e) => {
   __callbacks[e.data.callbackId] = null;
 };
 
-export default {
+export let renderer = {
   transfer: (audioData) => {
     let data = __data++;
     let buffers = audioData.map(array => array.buffer);
@@ -35,3 +35,5 @@ export default {
   },
   util: render.util
 };
+
+export default renderer;

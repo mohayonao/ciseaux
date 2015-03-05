@@ -1,11 +1,13 @@
 "use strict";
 
-import {TapeConstructor} from "./tape";
+import { Tape, TapeConstructor } from "./tape";
 import Fragment from "./fragment";
 import config from "./config";
 import renderer from "./renderer";
 
-class WebAudioTape extends TapeConstructor {
+let _audioContext = null;
+
+export class WebAudioTape extends TapeConstructor {
   constructor(audioBuffer) {
     super(audioBuffer.numberOfChannels, audioBuffer.sampleRate);
 
@@ -28,7 +30,45 @@ class WebAudioTape extends TapeConstructor {
 
 export default WebAudioTape;
 
-export var use = () => {
+export let use = () => {
+  let from = config.from = (src, audioContext = _audioContext) => {
+    if (src instanceof Tape) {
+      return Promise.resolve(src.clone());
+    }
+    if (src instanceof global.AudioBuffer) {
+      return Promise.resolve(new WebAudioTape(src));
+    }
+    if (_audioContext === null) {
+      _audioContext = audioContext || new global.AudioContext();
+    }
+    if (src instanceof ArrayBuffer) {
+      return new Promise((resolve, reject) => {
+        _audioContext.decodeAudioData(src, (audioBuffer) => {
+          resolve(audioBuffer);
+        }, reject);
+      }).then(from);
+    }
+    if (typeof src === "string") {
+      return new Promise((resolve, reject) => {
+        let xhr = new global.XMLHttpRequest();
+        xhr.open("GET", src);
+        xhr.responseType = "arraybuffer";
+        xhr.onload = () => {
+          /* istanbul ignore else */
+          if (xhr.status === 200) {
+            resolve(xhr.response);
+          } else {
+            reject(new Error(xhr.statusText));
+          }
+        };
+        xhr.onerror = () => {
+          reject(new Error(xhr.statusText));
+        };
+        xhr.send();
+      }).then(from);
+    }
+    return Promise.reject(new Error("Invalid arguments"));
+  };
   config.create = (audioBuffer) => {
     return new WebAudioTape(audioBuffer);
   };

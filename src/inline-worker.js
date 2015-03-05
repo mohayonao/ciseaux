@@ -3,7 +3,7 @@
 /* istanbul ignore next */
 const WORKER_ENABLED = !!(global === global.window && global.URL && global.Blob && global.Worker);
 
-class InlineWorker {
+export class InlineWorker {
   constructor(func, self) {
     /* istanbul ignore next */
     if (WORKER_ENABLED) {

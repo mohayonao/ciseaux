@@ -8,6 +8,7 @@ module.exports = require("./lib");
 
 module.exports = {
   sampleRate: 0,
+  from: null,
   create: null,
   render: null };
 },{}],3:[function(require,module,exports){
@@ -17,7 +18,7 @@ var _prototypeProperties = function (child, staticProps, instanceProps) { if (st
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
-var Fragment = (function () {
+var Fragment = exports.Fragment = (function () {
   function Fragment(data, beginTime, endTime) {
     _classCallCheck(this, Fragment);
 
@@ -93,7 +94,10 @@ var Fragment = (function () {
   return Fragment;
 })();
 
-module.exports = Fragment;
+exports["default"] = Fragment;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 },{}],4:[function(require,module,exports){
 "use strict";
 
@@ -103,10 +107,11 @@ var Sequence = _interopRequire(require("./sequence"));
 
 var Tape = _interopRequire(require("./tape"));
 
+var from = Tape.from;
 var silence = Tape.silence;
 var concat = Tape.concat;
 var mix = Tape.mix;
-module.exports = { Sequence: Sequence, Tape: Tape, silence: silence, concat: concat, mix: mix };
+module.exports = { Sequence: Sequence, Tape: Tape, from: from, silence: silence, concat: concat, mix: mix };
 },{"./sequence":8,"./tape":9}],5:[function(require,module,exports){
 (function (global){
 "use strict";
@@ -118,7 +123,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
 /* istanbul ignore next */
 var WORKER_ENABLED = !!(global === global.window && global.URL && global.Blob && global.Worker);
 
-var InlineWorker = (function () {
+var InlineWorker = exports.InlineWorker = (function () {
   function InlineWorker(func, self) {
     var _this = this;
 
@@ -161,7 +166,10 @@ var InlineWorker = (function () {
   return InlineWorker;
 })();
 
-module.exports = InlineWorker;
+exports["default"] = InlineWorker;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],6:[function(require,module,exports){
 "use strict";
@@ -465,7 +473,7 @@ worker.onmessage = function (e) {
   __callbacks[e.data.callbackId] = null;
 };
 
-module.exports = {
+var renderer = exports.renderer = {
   transfer: function (audioData) {
     var data = __data++;
     var buffers = audioData.map(function (array) {
@@ -488,6 +496,11 @@ module.exports = {
   },
   util: render.util
 };
+
+exports["default"] = renderer;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 },{"./inline-worker":5,"./render-worker":6}],8:[function(require,module,exports){
 "use strict";
 
@@ -499,61 +512,96 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
 
 var _tape = require("./tape");
 
-var Tape = _interopRequire(_tape);
-
+var Tape = _tape.Tape;
 var TapeConstructor = _tape.TapeConstructor;
 
 var config = _interopRequire(require("./config"));
 
-var getInstrumentFrom = function (instruments, ch, tape) {
-  if (!instruments.hasOwnProperty(ch)) {
-    return null;
+var getInstrumentFromRegExp = function (instruments, ch) {
+  var keys = Object.keys(instruments);
+
+  for (var i = 0; i < keys.length; i++) {
+    var matches = /^\/(.+)?\/(\w*)$/.exec(keys[i]);
+    if (matches && new RegExp(matches[1], matches[2]).test(ch)) {
+      return instruments[keys[i]];
+    }
   }
 
-  var instrument = instruments[ch];
+  return null;
+};
+
+var getInstrumentFrom = function (instruments, ch, index, tape) {
+  var instrument = null;
+
+  if (instruments.hasOwnProperty(ch)) {
+    instrument = instruments[ch];
+  } else {
+    instrument = getInstrumentFromRegExp(instruments, ch);
+  }
+
   if (typeof instrument === "function") {
-    instrument = instrument(ch, tape);
+    instrument = instrument(ch, index, tape);
   }
 
   return instrument instanceof Tape ? instrument : null;
 };
 
-var Sequence = (function () {
-  function Sequence(arg0, durationPerStep) {
+var Sequence = exports.Sequence = (function () {
+  function Sequence() {
+    var _this = this;
+
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
     _classCallCheck(this, Sequence);
 
-    if (typeof arg0 === "string") {
-      this.pattern = arg0;
-      this.instruments = null;
-    } else {
-      this.pattern = "";
-      this.instruments = arg0 || {};
-    }
-    this.durationPerStep = durationPerStep;
+    this.pattern = this.instruments = this.durationPerStep = null;
+    args.forEach(function (arg) {
+      if (typeof arg === "string") {
+        _this.pattern = arg;
+      } else if (typeof arg === "number" || Array.isArray(arg)) {
+        _this.durationPerStep = arg;
+      } else if (typeof arg === "object") {
+        _this.instruments = arg;
+      }
+    });
   }
 
   _prototypeProperties(Sequence, null, {
     apply: {
-      value: function apply(arg1) {
-        var pattern = null;
-        var instruments = null;
-
-        if (this.instruments === null) {
-          pattern = this.pattern;
-          instruments = arg1 || {};
-        } else {
-          pattern = String(arg1);
-          instruments = this.instruments;
+      value: function apply() {
+        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments[_key];
         }
 
-        var durationPerStep = Math.max(0, +this.durationPerStep || 0);
+        var _ref = this;
 
-        if (!(pattern.length && durationPerStep && instruments && typeof instruments === "object")) {
+        var pattern = _ref.pattern;
+        var instruments = _ref.instruments;
+        var durationPerStep = _ref.durationPerStep;
+
+        args.forEach(function (arg) {
+          if (typeof arg === "string") {
+            pattern = arg;
+          } else if (typeof arg === "number" || Array.isArray(arg)) {
+            durationPerStep = arg;
+          } else if (typeof arg === "object") {
+            instruments = arg;
+          }
+        });
+
+        if (pattern === null || instruments === null || durationPerStep === null) {
           return Tape.silence(0);
         }
 
-        return pattern.split("").reduce(function (tape, ch) {
-          var instrument = getInstrumentFrom(instruments, ch, tape);
+        var durationPerStepList = Array.isArray(durationPerStep) ? durationPerStep : [durationPerStep];
+
+        return pattern.split("").reduce(function (tape, ch, index) {
+          var instrument = getInstrumentFrom(instruments, ch, index, tape);
+          var durationPerStep = durationPerStepList[index % durationPerStepList.length];
+
+          durationPerStep = Math.max(0, +durationPerStep || 0);
 
           if (instrument !== null) {
             if (instrument.duration < durationPerStep) {
@@ -576,7 +624,10 @@ var Sequence = (function () {
   return Sequence;
 })();
 
-module.exports = Sequence;
+exports["default"] = Sequence;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 },{"./config":2,"./tape":9}],9:[function(require,module,exports){
 "use strict";
 
@@ -594,15 +645,14 @@ var config = _interopRequire(require("./config"));
 
 var util = {};
 
-var Tape = (function () {
+var Tape = exports.Tape = (function () {
   function Tape() {
-    for (var _len = arguments.length, _args = Array(_len), _key = 0; _key < _len; _key++) {
-      _args[_key] = arguments[_key];
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
     }
 
     _classCallCheck(this, Tape);
 
-    var args = _args.slice();
     if (config.create) {
       return config.create.apply(null, args);
     }
@@ -610,6 +660,20 @@ var Tape = (function () {
   }
 
   _prototypeProperties(Tape, {
+    from: {
+      value: function from() {
+        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments[_key];
+        }
+
+        if (config.from) {
+          return config.from.apply(null, args);
+        }
+        return Promise.resolve(new TapeConstructor(args[0], args[1]));
+      },
+      writable: true,
+      configurable: true
+    },
     silence: {
       value: function silence(duration) {
         return new TapeConstructor(1, config.sampleRate).silence(duration);
@@ -811,11 +875,11 @@ var Tape = (function () {
     },
     concat: {
       value: function concat() {
-        for (var _len = arguments.length, _tapes = Array(_len), _key = 0; _key < _len; _key++) {
-          _tapes[_key] = arguments[_key];
+        for (var _len = arguments.length, tapes = Array(_len), _key = 0; _key < _len; _key++) {
+          tapes[_key] = arguments[_key];
         }
 
-        var tapes = Array.prototype.concat.apply([], _tapes);
+        tapes = Array.prototype.concat.apply([], tapes);
 
         var newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
 
@@ -950,11 +1014,11 @@ var Tape = (function () {
     },
     mix: {
       value: function mix() {
-        for (var _len = arguments.length, _tapes = Array(_len), _key = 0; _key < _len; _key++) {
-          _tapes[_key] = arguments[_key];
+        for (var _len = arguments.length, tapes = Array(_len), _key = 0; _key < _len; _key++) {
+          tapes[_key] = arguments[_key];
         }
 
-        var tapes = Array.prototype.concat.apply([], _tapes);
+        tapes = Array.prototype.concat.apply([], tapes);
 
         var method = undefined;
         if (typeof tapes[tapes.length - 1] === "string") {
@@ -1037,8 +1101,6 @@ var Tape = (function () {
   return Tape;
 })();
 
-exports["default"] = Tape;
-
 var TapeConstructor = exports.TapeConstructor = (function (Tape) {
   function TapeConstructor(numberOfChannels, sampleRate) {
     _classCallCheck(this, TapeConstructor);
@@ -1090,6 +1152,8 @@ util.adjustDuration = function (tape, duration, method) {
       return tape.concat(tape.silence(duration - tape.duration));
   }
 };
+
+exports["default"] = Tape;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -1106,7 +1170,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
 
 var Fragment = _interopRequire(require("./fragment"));
 
-var Track = (function () {
+var Track = exports.Track = (function () {
   function Track() {
     var fragments = arguments[0] === undefined ? [] : arguments[0];
     var duration = arguments[1] === undefined ? 0 : arguments[1];
@@ -1266,8 +1330,12 @@ var Track = (function () {
   return Track;
 })();
 
-module.exports = Track;
+exports["default"] = Track;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 },{"./fragment":3}],11:[function(require,module,exports){
+(function (global){
 "use strict";
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
@@ -1280,7 +1348,10 @@ var _inherits = function (subClass, superClass) { if (typeof superClass !== "fun
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
-var TapeConstructor = require("./tape").TapeConstructor;
+var _tape = require("./tape");
+
+var Tape = _tape.Tape;
+var TapeConstructor = _tape.TapeConstructor;
 
 var Fragment = _interopRequire(require("./fragment"));
 
@@ -1288,7 +1359,9 @@ var config = _interopRequire(require("./config"));
 
 var renderer = _interopRequire(require("./renderer"));
 
-var WebAudioTape = (function (TapeConstructor) {
+var _audioContext = null;
+
+var WebAudioTape = exports.WebAudioTape = (function (TapeConstructor) {
   function WebAudioTape(audioBuffer) {
     _classCallCheck(this, WebAudioTape);
 
@@ -1323,6 +1396,46 @@ var WebAudioTape = (function (TapeConstructor) {
 
 exports["default"] = WebAudioTape;
 var use = exports.use = function () {
+  var from = config.from = function (src) {
+    var audioContext = arguments[1] === undefined ? _audioContext : arguments[1];
+
+    if (src instanceof Tape) {
+      return Promise.resolve(src.clone());
+    }
+    if (src instanceof global.AudioBuffer) {
+      return Promise.resolve(new WebAudioTape(src));
+    }
+    if (_audioContext === null) {
+      _audioContext = audioContext || new global.AudioContext();
+    }
+    if (src instanceof ArrayBuffer) {
+      return new Promise(function (resolve, reject) {
+        _audioContext.decodeAudioData(src, function (audioBuffer) {
+          resolve(audioBuffer);
+        }, reject);
+      }).then(from);
+    }
+    if (typeof src === "string") {
+      return new Promise(function (resolve, reject) {
+        var xhr = new global.XMLHttpRequest();
+        xhr.open("GET", src);
+        xhr.responseType = "arraybuffer";
+        xhr.onload = function () {
+          /* istanbul ignore else */
+          if (xhr.status === 200) {
+            resolve(xhr.response);
+          } else {
+            reject(new Error(xhr.statusText));
+          }
+        };
+        xhr.onerror = function () {
+          reject(new Error(xhr.statusText));
+        };
+        xhr.send();
+      }).then(from);
+    }
+    return Promise.reject(new Error("Invalid arguments"));
+  };
   config.create = function (audioBuffer) {
     return new WebAudioTape(audioBuffer);
   };
@@ -1354,5 +1467,6 @@ var use = exports.use = function () {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./config":2,"./fragment":3,"./renderer":7,"./tape":9}]},{},[1])(1)
 });

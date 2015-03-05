@@ -1,53 +1,75 @@
 "use strict";
 
-import Tape, {TapeConstructor} from "./tape";
+import { Tape, TapeConstructor } from "./tape";
 import config from "./config";
 
-let getInstrumentFrom = (instruments, ch, tape) => {
-  if (!instruments.hasOwnProperty(ch)) {
-    return null;
+let getInstrumentFromRegExp = (instruments, ch) => {
+  let keys = Object.keys(instruments);
+
+  for (let i = 0; i < keys.length; i++) {
+    let matches = /^\/(.+)?\/(\w*)$/.exec(keys[i]);
+    if (matches && new RegExp(matches[1], matches[2]).test(ch)) {
+      return instruments[keys[i]];
+    }
   }
 
-  let instrument = instruments[ch];
+  return null;
+};
+
+let getInstrumentFrom = (instruments, ch, index, tape) => {
+  let instrument = null;
+
+  if (instruments.hasOwnProperty(ch)) {
+    instrument = instruments[ch];
+  } else {
+    instrument = getInstrumentFromRegExp(instruments, ch);
+  }
+
   if (typeof instrument === "function") {
-    instrument = instrument(ch, tape);
+    instrument = instrument(ch, index, tape);
   }
 
   return (instrument instanceof Tape) ? instrument : null;
 };
 
-class Sequence {
-  constructor(arg0, durationPerStep) {
-    if (typeof arg0 === "string") {
-      this.pattern = arg0;
-      this.instruments = null;
-    } else {
-      this.pattern = "";
-      this.instruments = arg0 || {};
-    }
-    this.durationPerStep = durationPerStep;
+export class Sequence {
+  constructor(...args) {
+    this.pattern = this.instruments = this.durationPerStep = null;
+    args.forEach((arg) => {
+      if (typeof arg === "string") {
+        this.pattern = arg;
+      } else if (typeof arg === "number" || Array.isArray(arg)) {
+        this.durationPerStep = arg;
+      } else if (typeof arg === "object") {
+        this.instruments = arg;
+      }
+    });
   }
 
-  apply(arg1) {
-    let pattern = null;
-    let instruments = null;
+  apply(...args) {
+    let { pattern, instruments, durationPerStep } = this;
 
-    if (this.instruments === null) {
-      pattern = this.pattern;
-      instruments = arg1 || {};
-    } else {
-      pattern = String(arg1);
-      instruments = this.instruments;
-    }
+    args.forEach((arg) => {
+      if (typeof arg === "string") {
+        pattern = arg;
+      } else if (typeof arg === "number" || Array.isArray(arg)) {
+        durationPerStep = arg;
+      } else if (typeof arg === "object") {
+        instruments = arg;
+      }
+    });
 
-    let durationPerStep = Math.max(0, +this.durationPerStep || 0);
-
-    if (!(pattern.length && durationPerStep && instruments && typeof instruments === "object")) {
+    if (pattern === null || instruments === null || durationPerStep === null) {
       return Tape.silence(0);
     }
 
-    return pattern.split("").reduce((tape, ch) => {
-      let instrument = getInstrumentFrom(instruments, ch, tape);
+    let durationPerStepList = Array.isArray(durationPerStep) ? durationPerStep : [ durationPerStep ];
+
+    return pattern.split("").reduce((tape, ch, index) => {
+      let instrument = getInstrumentFrom(instruments, ch, index, tape);
+      let durationPerStep = durationPerStepList[index % durationPerStepList.length];
+
+      durationPerStep = Math.max(0, +durationPerStep || 0);
 
       if (instrument !== null) {
         if (instrument.duration < durationPerStep) {

@@ -2,7 +2,7 @@
 
 import Fragment from "./fragment";
 
-class Track {
+export class Track {
   static silence(duration) {
     return new Track([ new Fragment(0, 0, duration) ], duration);
   }

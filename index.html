@@ -29,6 +29,7 @@
           <a href="https://travis-ci.org/mohayonao/ciseaux"><img src="http://img.shields.io/travis/mohayonao/ciseaux.svg?style=flat-square"/></a>
           <a href="https://www.npmjs.org/package/ciseaux"><img src="http://img.shields.io/npm/v/ciseaux.svg?style=flat-square"/></a>
           <a href="http://bower.io/search/?q=ciseaux"><img src="http://img.shields.io/bower/v/ciseaux.svg?style=flat-square"/></a>
+          <a href="https://coveralls.io/r/mohayonao/ciseaux?branch=master"><img src="http://img.shields.io/coveralls/mohayonao/ciseaux.svg?style=flat-square"/></a>
           <a href="http://mohayonao.mit-license.org/"><img src="http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square"/></a>
         </div>
       </div>
@@ -227,12 +228,8 @@
       "./sound/tape1.wav",
       "./sound/tape2.wav",
     ].map(function(url, index) {
-      return fetch(url).then(function(res) {
-        return new Promise(function(resolve, reject) {
-          audioContext.decodeAudioData(res.arrayBuffer(), resolve, reject);
-        });
-      }).then(function(audioBuffer) {
-        window["tape" + (index + 1)] = new Ciseaux.Tape(audioBuffer);
+      Ciseaux.from(url, audioContext).then(function(tape) {
+        window["tape" + (index + 1)] = tape;
       });
     })).then(function() {
       var length = audioContext.sampleRate * 10;
