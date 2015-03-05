@@ -197,19 +197,19 @@ tape = new Ciseaux.Sequence("a bdaabcaccbgabb", {
 }).apply([ 2/3, 1/3 ].map(function(x) { return x * 0.3; })).fill(30);
 ```
 
-## :scissors: Workflow
+## :scissors: Architecture
 ```
-+---------------+     +----------------+              +-----------+
-| new Tape()    | --> | Float32Array[] | --transfer-> |           |
-|               |     +----------------+              |           |
-|               |                                     |           |
-|               |     +----------------+              |           |
-| Tape.render() | --> | JSON           | --transfer-> | WebWorker |
-+---------------+     +----------------+              |           |
-                                                      |           |
-+---------------+     +----------------+              |           |
-| AudioBuffer   | <-- | Float32Array[] | <-transfer-- |           |
-+---------------+     +----------------+              +-----------+
++---------------+     +----------------+                +-----------+
+| new Tape()    | --> | Float32Array[] | -- transfer -> |           |
+|               |     +----------------+                |           |
+|               |                                       |           |
+|               |     +----------------+                |           |
+| Tape.render() | --> | JSON           | -- transfer -> | WebWorker |
++---------------+     +----------------+                |           |
+                                                        |           |
++---------------+     +----------------+                |           |
+| AudioBuffer   | <-- | Float32Array[] | <- transfer -- |           |
++---------------+     +----------------+                +-----------+
 ```
 
 ## :scissors: Developments
