@@ -9,7 +9,12 @@
 
 ## :scissors: Demo
 
-[Ciseaux - JavaScript utility to chop an audio buffer : online examples](http://mohayonao.github.io/ciseaux/)
+- [Ciseaux - JavaScript utility to chop an audio buffer : online examples](http://mohayonao.github.io/ciseaux/)
+
+## :scissors: Documents
+
+- [Getting Started](https://github.com/mohayonao/ciseaux/wiki/Getting-Started)
+- [Editor's CheatSheet](https://github.com/mohayonao/ciseaux/wiki/Editor's-CheatSheet)
 
 ## :scissors: Installation
 
@@ -79,16 +84,15 @@ Utility class for creating a sequence tape that is concatenated tapes
 
 ## :scissors: Usage
 ```js
-tape = new Ciseaux.Tape(audioBuffer);
+// create a tape instance from the url
+Ciseaux.from("/path/to/audio.wav").then(function(tape) {
+  // edit tape
+  tape = Ciseaux.concat([ tape.slice(10, 1), tape.slice(2, 3) ]).loop(4);
 
-tape = Ciseaux.concat([ tape.slice(10, 1), tape.slice(2, 3) ]).loop(4);
-
-tape.render(audioContext).then(function(audioBuffer) {
-  var bufSrc = audioContext.createBuffer();
-
-  bufSrc.buffer = audioBuffer;
-  bufSrc.start(audioContext.currentTime);
-  bufSrc.connect();
+  // render the tape to an AudioBuffer
+  return tape.render(audioContext);
+}).then(function(audioBuffer) {
+  play(audioBuffer);
 });
 ```
 
@@ -191,6 +195,21 @@ tape = new Ciseaux.Sequence("a bdaabcaccbgabb", {
   f: tape2.split(16)[5].pitch(4).gain(0.1),
   g: tape3.pitch(32),
 }).apply([ 2/3, 1/3 ].map(function(x) { return x * 0.3; })).fill(30);
+```
+
+## :scissors: Workflow
+```
++---------------+     +----------------+              +-----------+
+| new Tape()    | --> | Float32Array[] | --transfer-> |           |
+|               |     +----------------+              |           |
+|               |                                     |           |
+|               |     +----------------+              |           |
+| Tape.render() | --> | JSON           | --transfer-> | WebWorker |
++---------------+     +----------------+              |           |
+                                                      |           |
++---------------+     +----------------+              |           |
+| AudioBuffer   | <-- | Float32Array[] | <-transfer-- |           |
++---------------+     +----------------+              +-----------+
 ```
 
 ## :scissors: Developments
