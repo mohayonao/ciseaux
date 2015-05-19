@@ -286,9 +286,11 @@ export default class Tape {
   }
 }
 
-util.toNumber = num => +num || 0;
+util.toNumber = function(num) {
+  return +num || 0;
+};
 
-util.adjustNumberOfTracks = (tape, numberOfTracks) => {
+util.adjustNumberOfTracks = function(tape, numberOfTracks) {
   let newInstance = new Tape(tape.numberOfChannels, tape.sampleRate);
 
   newInstance.tracks = tape.tracks.map(track => track.clone());
@@ -303,7 +305,7 @@ util.adjustNumberOfTracks = (tape, numberOfTracks) => {
   return newInstance;
 };
 
-util.adjustDuration = (tape, duration, method) => {
+util.adjustDuration = function(tape, duration, method) {
   if (tape.duration === 0) {
     return tape.silence(duration);
   }

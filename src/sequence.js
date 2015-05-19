@@ -1,7 +1,7 @@
 import Tape from "./tape";
 import config from "./config";
 
-let getInstrumentFromRegExp = (instruments, ch) => {
+function getInstrumentFromRegExp(instruments, ch) {
   let keys = Object.keys(instruments);
 
   for (let i = 0; i < keys.length; i++) {
@@ -12,9 +12,9 @@ let getInstrumentFromRegExp = (instruments, ch) => {
   }
 
   return null;
-};
+}
 
-let getInstrumentFrom = (instruments, ch, index, tape) => {
+function getInstrumentFrom(instruments, ch, index, tape) {
   let instrument = null;
 
   if (instruments.hasOwnProperty(ch)) {
@@ -28,9 +28,9 @@ let getInstrumentFrom = (instruments, ch, index, tape) => {
   }
 
   return (instrument instanceof Tape) ? instrument : null;
-};
+}
 
-export class Sequence {
+export default class Sequence {
   constructor(...args) {
     this.pattern = this.instruments = this.durationPerStep = null;
     args.forEach((arg) => {
@@ -83,5 +83,3 @@ export class Sequence {
     }, new Tape(1, config.sampleRate));
   }
 }
-
-export default Sequence;

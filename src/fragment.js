@@ -1,4 +1,4 @@
-export class Fragment {
+export default class Fragment {
   constructor(data, beginTime, endTime) {
     this.data = data;
     this.beginTime = beginTime;
@@ -56,5 +56,3 @@ export class Fragment {
     };
   }
 }
-
-export default Fragment;
