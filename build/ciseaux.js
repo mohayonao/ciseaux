@@ -175,25 +175,15 @@ exports.InlineWorker = InlineWorker;
 exports["default"] = InlineWorker;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],6:[function(require,module,exports){
-"use strict";
-/* jshint esnext: false */
-
-/**
-  CAUTION!!!!
-  This file is used in WebWorker.
-  So, must write with ES5, not use ES6.
-  You need attention not to be traspiled by babel.
-*/
-
 var self = {};
 
 function render() {
   self.repository = [];
 
-  self.onmessage = function (e) {
+  self.onmessage = function(e) {
     switch (e.data.type) {
       case "transfer":
-        self.repository[e.data.data] = e.data.buffers.map(function (buffer) {
+        self.repository[e.data.data] = e.data.buffers.map(function(buffer) {
           return new Float32Array(buffer);
         });
         break;
@@ -203,12 +193,12 @@ function render() {
       case "render":
         self.startRendering(e.data.tape, e.data.callbackId);
         break;
-    }
+      }
   };
 
-  self.startRendering = function (tape, callbackId) {
+  self.startRendering = function(tape, callbackId) {
     var destination = self.allocData(tape);
-    var buffers = destination.map(function (array) {
+    var buffers = destination.map(function(array) {
       return array.buffer;
     });
 
@@ -217,7 +207,7 @@ function render() {
     self.postMessage({ callbackId: callbackId, buffers: buffers }, buffers);
   };
 
-  self.allocData = function (tape) {
+  self.allocData = function(tape) {
     var data = new Array(tape.numberOfChannels);
     var length = Math.floor(tape.duration * tape.sampleRate);
 
@@ -228,14 +218,14 @@ function render() {
     return data;
   };
 
-  self.render = function (tape, destination) {
+  self.render = function(tape, destination) {
     for (var i = 0; i < tape.tracks.length; i++) {
       self.renderTrack(i, tape.tracks[i], destination, tape.sampleRate);
     }
   };
 
-  self.renderTrack = function (trackNum, fragments, destination, sampleRate) {
-    var usePan = fragments.some(function (fragment) {
+  self.renderTrack = function(trackNum, fragments, destination, sampleRate) {
+    var usePan = fragments.some(function(fragment) {
       return fragment.pan !== 0;
     });
 
@@ -275,7 +265,7 @@ function render() {
         self.process(srcSub, dstSub, {
           gain: fragment.gain,
           pan: usePan ? Math.max(-1, Math.min(fragment.pan, +1)) : null,
-          reverse: !!fragment.reverse
+          reverse: !!fragment.reverse,
         });
       }
 
@@ -283,7 +273,7 @@ function render() {
     }
   };
 
-  self.subarray = function (array, begin, end) {
+  self.subarray = function(array, begin, end) {
     var subarray = new Array(array.length);
 
     for (var i = 0; i < subarray.length; i++) {
@@ -293,7 +283,7 @@ function render() {
     return subarray;
   };
 
-  self.process = function (src, dst, opts) {
+  self.process = function(src, dst, opts) {
     var samples = new Array(src.length);
     var srcCh = src.length;
     var dstCh = dst.length;
@@ -322,7 +312,7 @@ function render() {
 
     for (var i = 0; i < dstLength; i++, index += step) {
       var x0 = i * factor;
-      var i0 = x0 | 0;
+      var i0 = x0|0;
       var i1 = Math.min(i0 + 1, srcLength - 1);
 
       for (ch = 0; ch < srcCh; ch++) {
@@ -342,64 +332,64 @@ function render() {
   };
 
   self.pan = [];
-  self.pan[1] = function (src, l, r) {
-    return [src[0] * l, src[0] * r];
+  self.pan[1] = function(src, l, r) {
+    return [ src[0] * l, src[0] * r ];
   };
-  self.pan[2] = function (src, l, r) {
+  self.pan[2] = function(src, l, r) {
     var x = (src[0] + src[1]) * 0.5;
-    return [x * l, x * r];
+    return [ x * l, x * r ];
   };
-  self.pan[4] = function (src, l, r) {
+  self.pan[4] = function(src, l, r) {
     var x = (src[0] + src[1]) * 0.5;
     var y = (src[2] + src[3]) * 0.5;
-    return [x * l, x * r, y * l, y * r];
+    return [ x * l, x * r , y * l, y * r ];
   };
-  self.pan[6] = function (src, l, r) {
+  self.pan[6] = function(src, l, r) {
     var x = (src[0] + src[1]) * 0.5;
     var y = (src[4] + src[5]) * 0.5;
-    return [x * l, x * r, src[2], src[3], y * l, y * r];
+    return [ x * l, x * r , src[2], src[3], y * l, y * r ];
   };
 
   self.mix = {};
-  self.mix["1->1"] = function (src, dst) {
+  self.mix["1->1"] = function(src, dst) {
     dst[0].set(src[0]);
   };
-  self.mix["1->2"] = function (src, dst) {
-    dst[0].set(src[0]);
-    dst[1].set(src[0]);
-  };
-  self.mix["1->4"] = function (src, dst) {
+  self.mix["1->2"] = function(src, dst) {
     dst[0].set(src[0]);
     dst[1].set(src[0]);
   };
-  self.mix["1->6"] = function (src, dst) {
+  self.mix["1->4"] = function(src, dst) {
+    dst[0].set(src[0]);
+    dst[1].set(src[0]);
+  };
+  self.mix["1->6"] = function(src, dst) {
     dst[2].set(src[0]);
   };
-  self.mix["2->2"] = function (src, dst) {
+  self.mix["2->2"] = function(src, dst) {
     dst[0].set(src[0]);
     dst[1].set(src[1]);
   };
-  self.mix["2->4"] = function (src, dst) {
+  self.mix["2->4"] = function(src, dst) {
     dst[0].set(src[0]);
     dst[1].set(src[1]);
   };
-  self.mix["2->6"] = function (src, dst) {
+  self.mix["2->6"] = function(src, dst) {
     dst[0].set(src[0]);
     dst[1].set(src[1]);
   };
-  self.mix["4->4"] = function (src, dst) {
+  self.mix["4->4"] = function(src, dst) {
     dst[0].set(src[0]);
     dst[1].set(src[1]);
     dst[2].set(src[2]);
     dst[3].set(src[3]);
   };
-  self.mix["4->6"] = function (src, dst) {
+  self.mix["4->6"] = function(src, dst) {
     dst[0].set(src[0]);
     dst[1].set(src[1]);
     dst[4].set(src[2]);
     dst[5].set(src[3]);
   };
-  self.mix["6->6"] = function (src, dst) {
+  self.mix["6->6"] = function(src, dst) {
     dst[0].set(src[0]);
     dst[1].set(src[1]);
     dst[2].set(src[2]);
@@ -409,50 +399,51 @@ function render() {
   };
 
   self.mix1 = {};
-  self.mix1.nop = function (src) {
+  self.mix1.nop = function(src) {
     return src;
   };
-  self.mix1["1->2"] = function (src) {
-    return [src[0], src[0]];
+  self.mix1["1->2"] = function(src) {
+    return [ src[0], src[0] ];
   };
-  self.mix1["1->4"] = function (src) {
-    return [src[0], src[0], 0, 0];
+  self.mix1["1->4"] = function(src) {
+    return [ src[0], src[0], 0, 0 ];
   };
-  self.mix1["1->6"] = function (src) {
-    return [0, 0, src[0], 0, 0, 0];
+  self.mix1["1->6"] = function(src) {
+    return [ 0, 0, src[0], 0, 0, 0 ];
   };
-  self.mix1["2->4"] = function (src) {
-    return [src[0], src[1], 0, 0];
+  self.mix1["2->4"] = function(src) {
+    return [ src[0], src[1], 0, 0 ];
   };
-  self.mix1["2->6"] = function (src) {
-    return [src[0], src[1], 0, 0, 0, 0];
+  self.mix1["2->6"] = function(src) {
+    return [ src[0], src[1], 0, 0, 0, 0 ];
   };
-  self.mix1["4->6"] = function (src) {
-    return [src[0], src[1], 0, 0, src[2], src[3]];
+  self.mix1["4->6"] = function(src) {
+    return [ src[0], src[1], 0, 0, src[2], src[3] ];
   };
-  self.mix1["2->1"] = function (src) {
-    return [0.5 * (src[0] + src[1])];
+  self.mix1["2->1"] = function(src) {
+    return [ 0.5 * (src[0] + src[1]) ];
   };
-  self.mix1["4->1"] = function (src) {
-    return [0.25 * (src[0] + src[1] + src[2] + src[3])];
+  self.mix1["4->1"] = function(src) {
+    return [ 0.25 * (src[0] + src[1] + src[2] + src[3]) ];
   };
-  self.mix1["6->1"] = function (src) {
-    return [0.7071 * (src[0] + src[1]) + src[2] + 0.5 * (src[4] + src[5])];
+  self.mix1["6->1"] = function(src) {
+    return [ 0.7071 * (src[0] + src[1]) + src[2] + 0.5 * (src[4] + src[5]) ];
   };
-  self.mix1["4->2"] = function (src) {
-    return [0.5 * (src[0] + src[2]), 0.5 * (src[1] + src[3])];
+  self.mix1["4->2"] = function(src) {
+    return [ 0.5 * (src[0] + src[2]), 0.5 * (src[1] + src[3]) ];
   };
-  self.mix1["6->2"] = function (src) {
-    return [src[0] + 0.7071 * (src[2] + src[4]), src[1] + 0.7071 * (src[2] + src[5])];
+  self.mix1["6->2"] = function(src) {
+    return [ src[0] + 0.7071 * (src[2] + src[4]), src[1] + 0.7071 * (src[2] + src[5]) ];
   };
-  self.mix1["6->4"] = function (src) {
-    return [src[0] + 0.7071 * src[2], src[1] + 0.7071 * src[2], src[4], src[5]];
+  self.mix1["6->4"] = function(src) {
+    return [ src[0] + 0.7071 * src[2], src[1] + 0.7071 * src[2], src[4], src[5] ];
   };
 }
 
 render.self = render.util = self;
 
 module.exports = render;
+
 },{}],7:[function(require,module,exports){
 "use strict";
 
