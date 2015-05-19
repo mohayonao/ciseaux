@@ -1,4 +1,4 @@
-import { Tape, TapeConstructor } from "./tape";
+import Tape from "./tape";
 import config from "./config";
 
 let getInstrumentFromRegExp = (instruments, ch) => {
@@ -80,7 +80,7 @@ export class Sequence {
       }
 
       return tape;
-    }, new TapeConstructor(1, config.sampleRate));
+    }, new Tape(1, config.sampleRate));
   }
 }
 

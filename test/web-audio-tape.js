@@ -126,15 +126,6 @@ describe("WebAudioTape", () => {
         });
       });
     });
-    describe("create(audioBuffer: AudioBuffer): WebAudioTape", () => {
-      it("should return a WebAudioTape", () => {
-        let buffer = audioContext.createBuffer(2, 100, 44100);
-        let tape = config.create(buffer);
-
-        assert(tape instanceof WebAudioTape);
-        assert(tape instanceof Tape);
-      });
-    });
     describe("render(audioContext: AudioContext, numberOfChannels: number): Promise<AudioBuffer>", () => {
       it("works", () => {
         let buffer = audioContext.createBuffer(2, 100, 44100);
