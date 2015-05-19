@@ -231,7 +231,9 @@
       Ciseaux.from(url, audioContext).then(function(tape) {
         window["tape" + (index + 1)] = tape;
       });
-    })).then(function() {
+    }));
+
+    (function() {
       var length = audioContext.sampleRate * 10;
       var sineWave = new Float32Array(length);
       var audioBuffer = audioContext.createBuffer(1, length, audioContext.sampleRate);
@@ -243,8 +245,10 @@
 
       audioBuffer.getChannelData(0).set(sineWave);
 
-      window.tape3 = new Ciseaux.Tape(audioBuffer);
-    });
+      Ciseaux.from(audioBuffer).then(function(tape) {
+        window.tape3 = tape;
+      });
+    })();
 
     fetch("./README.md").then(function(res) {
       var category, name, buffer;
