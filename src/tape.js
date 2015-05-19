@@ -1,5 +1,3 @@
-"use strict";
-
 import Track from "./track";
 import config from "./config";
 
@@ -185,14 +183,14 @@ export class Tape {
   fill(duration = this.duration) {
     duration = Math.max(0, util.toNumber(duration));
 
-    let this_duration = this.duration;
+    let this$duration = this.duration;
 
-    if (this_duration === 0) {
+    if (this$duration === 0) {
       return this.silence(duration);
     }
 
-    let loopCount = Math.floor(duration / this_duration);
-    let remain = duration % this_duration;
+    let loopCount = Math.floor(duration / this$duration);
+    let remain = duration % this$duration;
 
     return this.loop(loopCount).concat(this.slice(0, remain));
   }

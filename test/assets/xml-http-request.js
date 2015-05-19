@@ -1,10 +1,10 @@
-"use strict";
-
 import fs from "fs";
 
 export class XMLHttpRequest {
   constructor() {
     this.url = "";
+    this.status = 0;
+    this.statusText = "";
   }
 
   open(method, url) {
@@ -14,12 +14,14 @@ export class XMLHttpRequest {
   send() {
     fs.readFile(this.url, (err, data) => {
       if (err) {
-        [ this.status, this.statusText ] = [ 404, "Not Found" ];
+        this.status = 404;
+        this.statusText = "Not Found";
         if (typeof this.onerror === "function") {
           this.onerror(err);
         }
       } else {
-        [ this.status, this.statusText ] = [ 200, "OK" ];
+        this.status = 200;
+        this.statusText = "OK";
         if (typeof this.onload === "function") {
           if (this.responseType === "arraybuffer") {
             this.response = new Uint8Array(data).buffer;

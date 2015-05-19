@@ -1,5 +1,3 @@
-"use strict";
-
 import assert from "power-assert";
 import sinon from "sinon";
 import config from "../src/config";
@@ -382,7 +380,7 @@ describe("Tape", () => {
           [ createTapeFromList([ 4, 5 ]),
             createTapeFromList([ 6, 7 ]),
             createTapeFromList([ 8, 9 ]),
-            null
+            null,
           ],
           null
         );

@@ -1,5 +1,3 @@
-"use strict";
-
 import assert from "power-assert";
 import sinon from "sinon";
 import XMLHttpRequest from "./assets/xml-http-request";
@@ -76,7 +74,7 @@ describe("WebAudioTape", () => {
       describe("(src: ArrayBuffer): Promise<Tape>", () => {
         it("works", () => {
           let src = new Uint32Array([
-            1179011410,88,1163280727,544501094,16,131073,44100,176400,1048580,1635017060,8,0,0
+            1179011410,88,1163280727,544501094,16,131073,44100,176400,1048580,1635017060,8,0,0,
           ]).buffer;
 
           let result = config.from(src);

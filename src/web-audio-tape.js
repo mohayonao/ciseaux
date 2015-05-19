@@ -1,5 +1,3 @@
-"use strict";
-
 import { Tape, TapeConstructor } from "./tape";
 import Fragment from "./fragment";
 import config from "./config";

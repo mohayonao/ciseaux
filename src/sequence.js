@@ -1,5 +1,3 @@
-"use strict";
-
 import { Tape, TapeConstructor } from "./tape";
 import config from "./config";
 

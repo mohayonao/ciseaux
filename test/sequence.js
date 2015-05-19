@@ -1,5 +1,3 @@
-"use strict";
-
 import assert from "power-assert";
 import Fragment from "../src/fragment";
 import Tape from "../src/tape";
@@ -227,7 +225,7 @@ describe("Sequence", () => {
           "/a/i": createTapeFromList([ 1 ]),
           "/./": (ch) => {
             return createTapeFromList([ ch.charCodeAt(ch) ]);
-          }
+          },
         });
 
         let result = seq.apply();
@@ -248,7 +246,7 @@ describe("Sequence", () => {
     context("not found", () => {
       it("works", () => {
         let seq = new Sequence("abc", 0, {
-          c: null
+          c: null,
         });
 
         let result = seq.apply();

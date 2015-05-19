@@ -1,5 +1,3 @@
-"use strict";
-
 import InlineWorker from "./inline-worker";
 import render from "./render-worker";
 
@@ -33,7 +31,7 @@ export let renderer = {
       __callbacks[callbackId] = resolve;
     });
   },
-  util: render.util
+  util: render.util,
 };
 
 export default renderer;

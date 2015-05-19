@@ -1,5 +1,3 @@
-"use strict";
-
 import Fragment from "./fragment";
 
 export class Track {
