@@ -1,5 +1,3 @@
-"use strict";
-
 import InlineWorker from "./inline-worker";
 import render from "./render-worker";
 
@@ -8,23 +6,23 @@ let worker = new InlineWorker(render, render.self);
 let __callbacks = [];
 let __data = 1; // data 0 is reserved for silence
 
-worker.onmessage = (e) => {
+worker.onmessage = function(e) {
   let audioData = e.data.buffers.map(buffer => new Float32Array(buffer));
   __callbacks[e.data.callbackId](audioData);
   __callbacks[e.data.callbackId] = null;
 };
 
-export let renderer = {
-  transfer: (audioData) => {
+export default {
+  transfer(audioData) {
     let data = __data++;
     let buffers = audioData.map(array => array.buffer);
     worker.postMessage({ type: "transfer", data, buffers }, buffers);
     return data;
   },
-  dispose: (data) => {
+  dispose(data) {
     worker.postMessage({ type: "dispose", data });
   },
-  render: (tape) => {
+  render(tape) {
     let callbackId = __callbacks.length;
 
     worker.postMessage({ type: "render", tape, callbackId });
@@ -33,7 +31,5 @@ export let renderer = {
       __callbacks[callbackId] = resolve;
     });
   },
-  util: render.util
+  util: render.util,
 };
-
-export default renderer;

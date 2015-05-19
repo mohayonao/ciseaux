@@ -1,5 +1,3 @@
-"use strict";
-
 import assert from "power-assert";
 import renderer from "../src/renderer";
 
@@ -46,11 +44,11 @@ describe("renderer", () => {
     it("works", () => {
       let tape = {
         tracks: [
-          [ { data: 0, beginTime: 0, endTime: 0.5 } ]
+          [ { data: 0, beginTime: 0, endTime: 0.5 } ],
         ],
         duration: 0.5,
         sampleRate: 8000,
-        numberOfChannels: 2
+        numberOfChannels: 2,
       };
 
       return renderer.render(tape).then((audioData) => {

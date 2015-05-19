@@ -1,8 +1,6 @@
-"use strict";
-
 import Fragment from "./fragment";
 
-export class Track {
+export default class Track {
   static silence(duration) {
     return new Track([ new Fragment(0, 0, duration) ], duration);
   }
@@ -93,5 +91,3 @@ export class Track {
     return this;
   }
 }
-
-export default Track;

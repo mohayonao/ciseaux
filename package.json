@@ -1,25 +1,26 @@
 {
   "name": "ciseaux",
   "description": "utility to chop an audio buffer",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "author": "nao yonamine <mohayonao@gmail.com>",
   "bugs": {
     "url": "https://github.com/mohayonao/ciseaux/issues"
   },
   "dependencies": {},
   "devDependencies": {
-    "babel": "^4.6.6",
-    "browserify": "^9.0.3",
+    "babel": "^5.4.3",
+    "babel-core": "^5.4.2",
+    "babel-eslint": "^3.1.5",
+    "browserify": "^10.2.0",
     "coveralls": "^2.11.2",
-    "espower-babel": "^1.3.0",
-    "isparta": "^2.2.0",
-    "jshint": "^2.6.3",
-    "jshint-stylish": "^1.0.1",
-    "mocha": "^2.1.0",
-    "power-assert": "^0.10.2",
-    "sinon": "^1.12.2",
-    "uglify-js": "^2.4.16",
-    "web-audio-test-api": "^0.2.1"
+    "eslint": "^0.21.2",
+    "espower-babel": "^3.1.0",
+    "isparta": "^3.0.3",
+    "mocha": "^2.2.5",
+    "power-assert": "^0.11.0",
+    "sinon": "^1.14.1",
+    "uglify-js": "^2.4.22",
+    "web-audio-test-api": "^0.3.0"
   },
   "files": [
     "package.json",
@@ -45,8 +46,8 @@
     "build-minify": "uglifyjs build/ciseaux.js -m -r self -o build/ciseaux.min.js",
     "build-to5": "babel src --out-dir lib",
     "cover": "babel-node node_modules/.bin/isparta cover --report text --report html --report lcov node_modules/.bin/_mocha",
-    "lint": "jshint src test --reporter node_modules/jshint-stylish/stylish.js",
-    "test": "mocha --require espower-babel/guess",
+    "lint": "eslint src test",
+    "test": "mocha --compilers js:espower-babel/guess",
     "travis": "npm run lint && npm run cover"
   }
 }

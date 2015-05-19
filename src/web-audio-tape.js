@@ -1,13 +1,11 @@
-"use strict";
-
-import { Tape, TapeConstructor } from "./tape";
+import Tape from "./tape";
 import Fragment from "./fragment";
 import config from "./config";
 import renderer from "./renderer";
 
 let _audioContext = null;
 
-export class WebAudioTape extends TapeConstructor {
+export default class WebAudioTape extends Tape {
   constructor(audioBuffer) {
     super(audioBuffer.numberOfChannels, audioBuffer.sampleRate);
 
@@ -28,10 +26,9 @@ export class WebAudioTape extends TapeConstructor {
   }
 }
 
-export default WebAudioTape;
+export let use = function() {
 
-export let use = () => {
-  let from = config.from = (src, audioContext = _audioContext) => {
+  function from(src, audioContext = _audioContext) {
     if (src instanceof Tape) {
       return Promise.resolve(src.clone());
     }
@@ -68,11 +65,9 @@ export let use = () => {
       }).then(from);
     }
     return Promise.reject(new Error("Invalid arguments"));
-  };
-  config.create = (audioBuffer) => {
-    return new WebAudioTape(audioBuffer);
-  };
-  config.render = (tape, audioContext, numberOfChannels = 0) => {
+  }
+
+  function render(tape, audioContext, numberOfChannels = 0) {
     numberOfChannels = Math.max(numberOfChannels, tape.numberOfChannels);
 
     tape.numberOfChannels = numberOfChannels;
@@ -93,5 +88,8 @@ export let use = () => {
 
       return audioBuffer;
     });
-  };
+  }
+
+  config.from = from;
+  config.render = render;
 };

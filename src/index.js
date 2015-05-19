@@ -1,5 +1,3 @@
-"use strict";
-
 import Sequence from "./sequence";
 import Tape from "./tape";
 

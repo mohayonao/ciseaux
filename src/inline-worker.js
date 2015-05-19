@@ -1,11 +1,7 @@
-"use strict";
-
-/* istanbul ignore next */
 const WORKER_ENABLED = !!(global === global.window && global.URL && global.Blob && global.Worker);
 
 export class InlineWorker {
   constructor(func, self) {
-    /* istanbul ignore next */
     if (WORKER_ENABLED) {
       let functionBody = func.toString().trim().match(
         /^function\s*\w*\s*\([\w\s,]*\)\s*{([\w\W]*?)}$/

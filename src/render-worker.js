@@ -1,13 +1,3 @@
-"use strict";
-/* jshint esnext: false */
-
-/**
-  CAUTION!!!!
-  This file is used in WebWorker.
-  So, must write with ES5, not use ES6.
-  You need attention not to be traspiled by babel.
-*/
-
 var self = {};
 
 function render() {
@@ -98,7 +88,7 @@ function render() {
         self.process(srcSub, dstSub, {
           gain: fragment.gain,
           pan: usePan ? Math.max(-1, Math.min(fragment.pan, +1)) : null,
-          reverse: !!fragment.reverse
+          reverse: !!fragment.reverse,
         });
       }
 

@@ -1,5 +1,3 @@
-"use strict";
-
 import assert from "power-assert";
 import renderer from "../src/renderer";
 import render from "../src/render-worker";
@@ -14,12 +12,12 @@ describe("render", () => {
       let tape = {
         tracks: [
           [
-            { data: 0, beginTime: 0, endTime: 0.5 }
-          ]
+            { data: 0, beginTime: 0, endTime: 0.5 },
+          ],
         ],
         duration: 0.5,
         sampleRate: 8000,
-        numberOfChannels: 2
+        numberOfChannels: 2,
       };
       let data = render.util.allocData(tape);
 
@@ -107,11 +105,11 @@ describe("render", () => {
               pitch: 1,
               stretch: false,
             },
-          ]
+          ],
         ],
         duration: 0.5,
         sampleRate: 8000,
-        numberOfChannels: 2
+        numberOfChannels: 2,
       };
       let destination = render.util.allocData(tape);
 
@@ -162,7 +160,7 @@ describe("render", () => {
         render.util.process(src, dst, {
           gain: 1,
           pan: null,
-          reverse: false
+          reverse: false,
         });
 
         assert(closeTo(dst[0][0], (0.00 + 0.00) * 0.5, 1e-6));
@@ -190,7 +188,7 @@ describe("render", () => {
         render.util.process(src, dst, {
           gain: 0.5,
           pan: null,
-          reverse: false
+          reverse: false,
         });
 
         assert(closeTo(dst[0][0], (0.00 + 0.00) * 0.25, 1e-6));
@@ -221,7 +219,7 @@ describe("render", () => {
         render.util.process(src, dst, {
           gain: 1,
           pan: 0,
-          reverse: false
+          reverse: false,
         });
 
         assert(closeTo(dst[0][0], (0.00 + 0.00) * 0.5 * l, 1e-6));
@@ -259,7 +257,7 @@ describe("render", () => {
         render.util.process(src, dst, {
           gain: 1,
           pan: null,
-          reverse: true
+          reverse: true,
         });
 
         assert(closeTo(dst[0][9], (0.00 + 0.00) * 0.5, 1e-6));
@@ -287,7 +285,7 @@ describe("render", () => {
         render.util.process(src, dst, {
           gain: 1,
           pan: null,
-          reverse: false
+          reverse: false,
         });
 
         assert(closeTo(dst[0][ 0], (0.00 + 0.00) * 0.5, 1e-6));

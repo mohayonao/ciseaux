@@ -1,28 +1,26 @@
-"use strict";
-
 import Track from "./track";
 import config from "./config";
 
 let util = {};
 
-export class Tape {
+export default class Tape {
   static from(...args) {
     if (config.from) {
       return config.from.apply(null, args);
     }
-    return Promise.resolve(new TapeConstructor(args[0], args[1]));
+    return Promise.resolve(new Tape(args[0], args[1]));
   }
 
   static silence(duration) {
-    return new TapeConstructor(1, config.sampleRate).silence(duration);
+    return new Tape(1, config.sampleRate).silence(duration);
   }
 
   static concat(...args) {
-    return Tape.prototype.concat.apply(new TapeConstructor(1, config.sampleRate), args);
+    return Tape.prototype.concat.apply(new Tape(1, config.sampleRate), args);
   }
 
   static mix(...args) {
-    let newInstance = Tape.prototype.mix.apply(new TapeConstructor(1, config.sampleRate), args);
+    let newInstance = Tape.prototype.mix.apply(new Tape(1, config.sampleRate), args);
 
     if (1 < newInstance.tracks.length) {
       newInstance.tracks.shift(); // remove first empty track
@@ -31,11 +29,10 @@ export class Tape {
     return newInstance;
   }
 
-  constructor(...args) {
-    if (config.create) {
-      return config.create.apply(null, args);
-    }
-    return new TapeConstructor(args[0], args[1]);
+  constructor(numberOfChannels, sampleRate) {
+    this.tracks = [ new Track() ];
+    this._numberOfChannels = Math.max(1, numberOfChannels|0);
+    this._sampleRate = Math.max(0, sampleRate|0) || config.sampleRate;
   }
 
   get sampleRate() {
@@ -61,7 +58,7 @@ export class Tape {
   gain(gain = 1) {
     gain = util.toNumber(gain);
 
-    let newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
+    let newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
     newInstance.tracks = this.tracks.map(track => track.gain(gain));
 
@@ -71,7 +68,7 @@ export class Tape {
   pan(pan = 0) {
     pan = util.toNumber(pan);
 
-    let newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
+    let newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
     newInstance.tracks = this.tracks.map(track => track.pan(pan));
 
@@ -79,7 +76,7 @@ export class Tape {
   }
 
   reverse() {
-    let newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
+    let newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
     newInstance.tracks = this.tracks.map(track => track.reverse());
 
@@ -89,7 +86,7 @@ export class Tape {
   pitch(rate = 1) {
     rate = Math.max(0, util.toNumber(rate));
 
-    let newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
+    let newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
     newInstance.tracks = this.tracks.map(track => track.pitch(rate));
 
@@ -99,7 +96,7 @@ export class Tape {
   stretch(rate = 1) {
     rate = Math.max(0, util.toNumber(rate));
 
-    let newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
+    let newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
     newInstance.tracks = this.tracks.map(track => track.stretch(rate));
 
@@ -107,7 +104,7 @@ export class Tape {
   }
 
   clone() {
-    let newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
+    let newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
     newInstance.tracks = this.tracks.map(track => track.clone());
 
@@ -117,7 +114,7 @@ export class Tape {
   silence(duration = 0) {
     duration = Math.max(0, util.toNumber(duration));
 
-    let newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
+    let newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
     if (0 < duration) {
       newInstance.tracks = this.tracks.map(() => Track.silence(duration));
@@ -129,12 +126,12 @@ export class Tape {
   concat(...tapes) {
     tapes = Array.prototype.concat.apply([], tapes);
 
-    let newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
+    let newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
     newInstance.tracks = this.tracks.map(track => track.clone());
 
     tapes.forEach((tape) => {
-      if (!(tape instanceof TapeConstructor && 0 < tape.duration)) {
+      if (!(tape instanceof Tape && 0 < tape.duration)) {
         return;
       }
       if (newInstance._numberOfChannels < tape._numberOfChannels) {
@@ -163,7 +160,7 @@ export class Tape {
     }
     beginTime = Math.max(0, beginTime);
 
-    let newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
+    let newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
     newInstance.tracks = this.tracks.map(track => track.slice(beginTime, duration));
 
@@ -179,20 +176,20 @@ export class Tape {
       tapes[i] = this;
     }
 
-    return new TapeConstructor(this.numberOfChannels, this.sampleRate).concat(tapes);
+    return new Tape(this.numberOfChannels, this.sampleRate).concat(tapes);
   }
 
   fill(duration = this.duration) {
     duration = Math.max(0, util.toNumber(duration));
 
-    let this_duration = this.duration;
+    let this$duration = this.duration;
 
-    if (this_duration === 0) {
+    if (this$duration === 0) {
       return this.silence(duration);
     }
 
-    let loopCount = Math.floor(duration / this_duration);
-    let remain = duration % this_duration;
+    let loopCount = Math.floor(duration / this$duration);
+    let remain = duration % this$duration;
 
     return this.loop(loopCount).concat(this.slice(0, remain));
   }
@@ -234,12 +231,12 @@ export class Tape {
       method = tapes.pop();
     }
 
-    let newInstance = new TapeConstructor(this.numberOfChannels, this.sampleRate);
+    let newInstance = new Tape(this.numberOfChannels, this.sampleRate);
 
     newInstance.tracks = this.tracks.map(track => track.clone());
 
     tapes.forEach((tape) => {
-      if (!(tape instanceof TapeConstructor && 0 < tape.duration)) {
+      if (!(tape instanceof Tape && 0 < tape.duration)) {
         return;
       }
       if (newInstance._numberOfChannels < tape._numberOfChannels) {
@@ -289,18 +286,12 @@ export class Tape {
   }
 }
 
-export class TapeConstructor extends Tape {
-  constructor(numberOfChannels, sampleRate) {
-    this.tracks = [ new Track() ];
-    this._numberOfChannels = Math.max(1, numberOfChannels|0);
-    this._sampleRate = Math.max(0, sampleRate|0) || config.sampleRate;
-  }
-}
+util.toNumber = function(num) {
+  return +num || 0;
+};
 
-util.toNumber = num => +num || 0;
-
-util.adjustNumberOfTracks = (tape, numberOfTracks) => {
-  let newInstance = new TapeConstructor(tape.numberOfChannels, tape.sampleRate);
+util.adjustNumberOfTracks = function(tape, numberOfTracks) {
+  let newInstance = new Tape(tape.numberOfChannels, tape.sampleRate);
 
   newInstance.tracks = tape.tracks.map(track => track.clone());
 
@@ -314,7 +305,7 @@ util.adjustNumberOfTracks = (tape, numberOfTracks) => {
   return newInstance;
 };
 
-util.adjustDuration = (tape, duration, method) => {
+util.adjustDuration = function(tape, duration, method) {
   if (tape.duration === 0) {
     return tape.silence(duration);
   }
@@ -329,5 +320,3 @@ util.adjustDuration = (tape, duration, method) => {
     return tape.concat(tape.silence(duration - tape.duration));
   }
 };
-
-export default Tape;

@@ -41,9 +41,6 @@ downloads:
 - `Ciseaux.concat(...tapes: Tape): Tape`
 - `Ciseaux.mix(...tapes: Tape, [method='silence']): Tape`
 
-### Ciseaux.Tape
-- `constructor(audioBuffer: AudioBuffer)`
-
 #### Instance attributes
 - `sampleRate: number` _readonly_
 - `length: number` _readonly_
@@ -224,7 +221,7 @@ npm run test
 # Coverage : mocha + isparta
 npm run cover
 
-# Lint : jshint
+# Lint : eslint
 npm run lint
 ```
 
