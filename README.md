@@ -36,7 +36,8 @@ downloads:
 - [ciseaux.min.js](https://raw.githubusercontent.com/mohayonao/ciseaux/master/build/ciseaux.min.js)
 
 ## :scissors: API
-- `Ciseaux.from(src: ArrayBuffer|string, [audioContext: AudioContext]): Promise<Tape>`
+- `Ciseaux.context = AudioContext`
+- `Ciseaux.from(src: string): Promise<Tape>`
 - `Ciseaux.silence(duration: number): Tape`
 - `Ciseaux.concat(...tapes: Tape): Tape`
 - `Ciseaux.mix(...tapes: Tape, [method='silence']): Tape`
@@ -62,7 +63,7 @@ downloads:
 - `replace(startTime: number = 0, duration: number = 0, tape: Tape = null): Tape`
 - `split(n: number = 2): Tape[]`
 - `mix(...tapes: Tape, [method = 'silence']): Tape`
-- `render(audioContext: AudioContext): Promise<AudioBuffer>`
+- `render(): Promise<AudioBuffer>`
 - `dispose(): void`
 
 ### Ciseaux.Sequence
@@ -80,16 +81,38 @@ Utility class for creating a sequence tape that is concatenated tapes
   - `instruments: object`
 
 ## :scissors: Usage
+#### browser
+
 ```js
+Ciseaux.context = new AudioContext();
+
 // create a tape instance from the url
 Ciseaux.from("/path/to/audio.wav").then(function(tape) {
   // edit tape
   tape = Ciseaux.concat([ tape.slice(10, 1), tape.slice(2, 3) ]).loop(4);
 
   // render the tape to an AudioBuffer
-  return tape.render(audioContext);
+  return tape.render();
 }).then(function(audioBuffer) {
   play(audioBuffer);
+});
+```
+
+#### node.js
+
+```js
+var fs = require("fs");
+var Ciseaux = require("ciseaux");
+
+// create a tape instance from the filepath
+Ciseaux.from("/path/to/audio.wav").then(function(tape) {
+  // edit tape
+  tape = Ciseaux.concat([ tape.slice(10, 1), tape.slice(2, 3) ]).loop(4);
+
+  // render the tape to Buffer (wav format)
+  return tape.render();
+}).then(function(buffer) {
+  fs.writeFile("/path/to/ciseauxed.wav", buffer);
 });
 ```
 
@@ -205,8 +228,15 @@ tape = new Ciseaux.Sequence("a bdaabcaccbgabb", {
 +---------------+     +----------------+                |           |
                                                         |           |
 +---------------+     +----------------+                |           |
-| AudioBuffer   | <-- | Float32Array[] | <- transfer -- |           |
+| AudioData     | <-- | Float32Array[] | <- transfer -- |           |
 +---------------+     +----------------+                +-----------+
+  |
+  +----------------+
+  | browser        | node.js
+  v                v
++-------------+  +---------------------+
+| AudioBuffer |  | Buffer (wav format) |
++-------------+  +---------------------+
 ```
 
 ## :scissors: Developments
