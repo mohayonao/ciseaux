@@ -3,7 +3,7 @@ import Tape from "./tape";
 import config from "./config";
 import renderer from "./renderer";
 
-let _audioContext = null;
+let AudioContext = global.AudioContext || global.webkitAudioContext;
 
 function load(url) {
   return new Promise((resolve, reject) => {
@@ -25,8 +25,11 @@ function load(url) {
 }
 
 function decode(buffer) {
+  if (config.context === null) {
+    config.context = new AudioContext();
+  }
   return new Promise((resolve, reject) => {
-    _audioContext.decodeAudioData(buffer, (audioBuffer) => {
+    config.context.decodeAudioData(buffer, (audioBuffer) => {
       resolve(toAudioData(audioBuffer));
     }, reject);
   });
@@ -36,7 +39,7 @@ function toAudioData(audioBuffer) {
   return AudioData.fromAudioBuffer(audioBuffer);
 }
 
-function from(src, audioContext = _audioContext) {
+function from(src) {
   if (src instanceof Tape) {
     return Promise.resolve(src.clone());
   }
@@ -46,8 +49,8 @@ function from(src, audioContext = _audioContext) {
   if (src instanceof global.AudioBuffer) {
     return Promise.resolve(new Tape(toAudioData(src)));
   }
-  if (_audioContext === null) {
-    _audioContext = audioContext || new global.AudioContext();
+  if (config.context === null) {
+    config.context = new AudioContext();
   }
   if (src instanceof ArrayBuffer) {
     return decode(src).then(from);
@@ -58,20 +61,26 @@ function from(src, audioContext = _audioContext) {
   return Promise.reject(new Error("Invalid arguments"));
 }
 
-function render(tape, audioContext = _audioContext, numberOfChannels = 0) {
+function render(tape, numberOfChannels = 0) {
   numberOfChannels = Math.max(numberOfChannels, tape.numberOfChannels);
 
   tape.numberOfChannels = numberOfChannels;
+
+  if (config.context === null) {
+    config.context = new AudioContext();
+  }
 
   return renderer.render(tape).then((channelData) => {
     return AudioData.toAudioBuffer({
       sampleRate: tape.sampleRate,
       channelData: channelData,
-    }, audioContext);
+    }, config.context);
   });
 }
 
-export let use = function() {
+export default function() {
+  config.load = load;
+  config.decode = decode;
   config.from = from;
   config.render = render;
-};
+}
