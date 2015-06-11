@@ -11,7 +11,6 @@ function load(url) {
     xhr.open("GET", url);
     xhr.responseType = "arraybuffer";
     xhr.onload = () => {
-      /* istanbul ignore else */
       if (xhr.status === 200) {
         resolve(xhr.response);
       } else {

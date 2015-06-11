@@ -9,7 +9,7 @@ let util = {};
 export default class Tape {
   static from(...args) {
     if (config.from) {
-      return config.from.apply(null, args);
+      return config.from(...args);
     }
     return Promise.resolve(new Tape(args[0], args[1]));
   }
@@ -19,11 +19,11 @@ export default class Tape {
   }
 
   static concat(...args) {
-    return Tape.prototype.concat.apply(new Tape(1, config.sampleRate), args);
+    return new Tape(1, config.sampleRate).concat(...args);
   }
 
   static mix(...args) {
-    let newInstance = Tape.prototype.mix.apply(new Tape(1, config.sampleRate), args);
+    let newInstance = new Tape(1, config.sampleRate).mix(...args);
 
     if (1 < newInstance.tracks.length) {
       newInstance.tracks.shift(); // remove first empty track
@@ -263,7 +263,7 @@ export default class Tape {
 
   render(...args) {
     if (config.render) {
-      return config.render.apply(null, [ this.toJSON() ].concat(args));
+      return config.render(this.toJSON(), ...args);
     }
     return new Promise((resolve, reject) => {
       reject(new Error("not implemented"));
