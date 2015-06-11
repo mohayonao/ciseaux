@@ -6,16 +6,19 @@ describe("renderer", () => {
 
   describe("transfer(audioData: Float32Array[]): number", () => {
     it("should put audioData to the repository", (done) => {
-      let audioData = [
-        new Float32Array([ 0, 1, 2, 3, 4 ]),
-        new Float32Array([ 5, 6, 7, 8, 9 ]),
-      ];
+      let audiodata = {
+        sampleRate: 8000,
+        channelData: [
+          new Float32Array([ 0, 1, 2, 3, 4 ]),
+          new Float32Array([ 5, 6, 7, 8, 9 ]),
+        ],
+      };
 
-      let result = renderer.transfer(audioData);
+      let result = renderer.transfer(audiodata);
 
       setTimeout(() => {
-        assert(renderer.util.repository[result] !== audioData);
-        assert.deepEqual(renderer.util.repository[result], audioData);
+        assert(renderer.util.repository[result] !== audiodata.channelData);
+        assert.deepEqual(renderer.util.repository[result], audiodata.channelData);
         done();
       }, 0);
 

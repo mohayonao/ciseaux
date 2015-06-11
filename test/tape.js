@@ -30,7 +30,7 @@ class TestTape extends Tape {
   }
 }
 
-describe.only("Tape", () => {
+describe("Tape", () => {
   describe(".from(...args): Promise<Tape>", () => {
     let config$from;
     before(() => {

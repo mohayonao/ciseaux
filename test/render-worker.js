@@ -38,7 +38,7 @@ describe("render", () => {
       for (let i = 0; i < buffer.length; i++) {
         buffer[i] = X;
       }
-      let data = renderer.transfer([ buffer ]);
+      let data = renderer.transfer({ sampleRate: 8000, channelData: [ buffer ] });
 
       let tape = {
         tracks: [
