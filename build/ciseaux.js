@@ -1,20 +1,136 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Ciseaux = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-require("./lib/web-audio-tape").use();
+require("./lib/browser-interface")();
 
 module.exports = require("./lib");
 
-},{"./lib":4,"./lib/web-audio-tape":11}],2:[function(require,module,exports){
+},{"./lib":5,"./lib/browser-interface":2}],2:[function(require,module,exports){
+(function (global){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+var _audiodata = require("audiodata");
+
+var _audiodata2 = _interopRequireDefault(_audiodata);
+
+var _tape = require("./tape");
+
+var _tape2 = _interopRequireDefault(_tape);
+
+var _config = require("./config");
+
+var _config2 = _interopRequireDefault(_config);
+
+var _renderer = require("./renderer");
+
+var _renderer2 = _interopRequireDefault(_renderer);
+
+var AudioContext = global.AudioContext || global.webkitAudioContext;
+
+function load(url) {
+  return new Promise(function (resolve, reject) {
+    var xhr = new global.XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.responseType = "arraybuffer";
+    xhr.onload = function () {
+      if (xhr.status === 200) {
+        resolve(xhr.response);
+      } else {
+        reject(new Error(xhr.statusText));
+      }
+    };
+    xhr.onerror = function () {
+      reject(new Error(xhr.statusText));
+    };
+    xhr.send();
+  });
+}
+
+function decode(buffer) {
+  if (_config2["default"].context === null) {
+    _config2["default"].context = new AudioContext();
+  }
+  return new Promise(function (resolve, reject) {
+    _config2["default"].context.decodeAudioData(buffer, function (audioBuffer) {
+      resolve(toAudioData(audioBuffer));
+    }, reject);
+  });
+}
+
+function toAudioData(audioBuffer) {
+  return _audiodata2["default"].fromAudioBuffer(audioBuffer);
+}
+
+function from(src) {
+  if (src instanceof _tape2["default"]) {
+    return Promise.resolve(src.clone());
+  }
+  if (_audiodata2["default"].isAudioData(src)) {
+    return Promise.resolve(new _tape2["default"](src));
+  }
+  if (src instanceof global.AudioBuffer) {
+    return Promise.resolve(new _tape2["default"](toAudioData(src)));
+  }
+  if (_config2["default"].context === null) {
+    _config2["default"].context = new AudioContext();
+  }
+  if (src instanceof ArrayBuffer) {
+    return decode(src).then(from);
+  }
+  if (typeof src === "string") {
+    return load(src).then(from);
+  }
+  return Promise.reject(new Error("Invalid arguments"));
+}
+
+function render(tape) {
+  var numberOfChannels = arguments[1] === undefined ? 0 : arguments[1];
+
+  numberOfChannels = Math.max(numberOfChannels, tape.numberOfChannels);
+
+  tape.numberOfChannels = numberOfChannels;
+
+  if (_config2["default"].context === null) {
+    _config2["default"].context = new AudioContext();
+  }
+
+  return _renderer2["default"].render(tape).then(function (channelData) {
+    return _audiodata2["default"].toAudioBuffer({
+      sampleRate: tape.sampleRate,
+      channelData: channelData
+    }, _config2["default"].context);
+  });
+}
+
+exports["default"] = function () {
+  _config2["default"].load = load;
+  _config2["default"].decode = decode;
+  _config2["default"].from = from;
+  _config2["default"].render = render;
+};
+
+module.exports = exports["default"];
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./config":3,"./renderer":7,"./tape":9,"audiodata":11}],3:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports["default"] = {
+  context: null,
   sampleRate: 0,
+  load: null,
+  decode: null,
   from: null,
-  render: null };
+  render: null
+};
 module.exports = exports["default"];
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -40,11 +156,6 @@ var Fragment = (function () {
   }
 
   _createClass(Fragment, [{
-    key: "duration",
-    get: function () {
-      return (this.endTime - this.beginTime) / this.pitch;
-    }
-  }, {
     key: "slice",
     value: function slice(beginTime, duration) {
       beginTime = this.beginTime + beginTime * this.pitch;
@@ -86,7 +197,13 @@ var Fragment = (function () {
         pan: this.pan,
         reverse: this.reverse,
         pitch: this.pitch,
-        stretch: this.stretch };
+        stretch: this.stretch
+      };
+    }
+  }, {
+    key: "duration",
+    get: function () {
+      return (this.endTime - this.beginTime) / this.pitch;
     }
   }]);
 
@@ -95,12 +212,14 @@ var Fragment = (function () {
 
 exports["default"] = Fragment;
 module.exports = exports["default"];
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
+(function (global){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+var _bind = Function.prototype.bind;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -112,69 +231,53 @@ var _tape = require("./tape");
 
 var _tape2 = _interopRequireDefault(_tape);
 
-var from = _tape2["default"].from;
-var silence = _tape2["default"].silence;
-var concat = _tape2["default"].concat;
-var mix = _tape2["default"].mix;
-exports["default"] = { Sequence: _sequence2["default"], Tape: _tape2["default"], from: from, silence: silence, concat: concat, mix: mix };
-module.exports = exports["default"];
-},{"./sequence":8,"./tape":9}],5:[function(require,module,exports){
-(function (global){
-"use strict";
+var _config = require("./config");
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
+var _config2 = _interopRequireDefault(_config);
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var AudioContext = global.AudioContext || global.webkitAudioContext;
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+exports["default"] = Object.defineProperties({
+  load: function load(filepath) {
+    return _config2["default"].load(filepath);
+  },
+  decode: function decode(buffer) {
+    return _config2["default"].decode(buffer);
+  },
 
-var WORKER_ENABLED = !!(global === global.window && global.URL && global.Blob && global.Worker);
+  Sequence: _sequence2["default"],
+  Tape: _tape2["default"],
 
-var InlineWorker = (function () {
-  function InlineWorker(func, self) {
-    var _this = this;
-
-    _classCallCheck(this, InlineWorker);
-
-    if (WORKER_ENABLED) {
-      var functionBody = func.toString().trim().match(/^function\s*\w*\s*\([\w\s,]*\)\s*{([\w\W]*?)}$/)[1];
-      var url = global.URL.createObjectURL(new global.Blob([functionBody], { type: "text/javascript" }));
-
-      return new global.Worker(url);
+  from: function from() {
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
     }
 
-    this.self = self;
-    this.self.postMessage = function (data) {
-      setTimeout(function () {
-        _this.onmessage({ data: data });
-      }, 0);
-    };
-
-    setTimeout(function () {
-      func.call(self);
-    }, 0);
+    if (_config2["default"].from) {
+      return _config2["default"].from.apply(_config2["default"], args);
+    }
+    return Promise.resolve(new (_bind.apply(_tape2["default"], [null].concat(args)))());
+  },
+  silence: _tape2["default"].silence,
+  concat: _tape2["default"].concat,
+  mix: _tape2["default"].mix
+}, {
+  context: {
+    get: function () {
+      return _config2["default"].context;
+    },
+    set: function (audioContext) {
+      if (AudioContext && audioContext instanceof AudioContext) {
+        _config2["default"].context = audioContext;
+      }
+    },
+    configurable: true,
+    enumerable: true
   }
-
-  _createClass(InlineWorker, [{
-    key: "postMessage",
-    value: function postMessage(data) {
-      var _this2 = this;
-
-      setTimeout(function () {
-        _this2.self.onmessage({ data: data });
-      }, 0);
-    }
-  }]);
-
-  return InlineWorker;
-})();
-
-exports.InlineWorker = InlineWorker;
-exports["default"] = InlineWorker;
+});
+module.exports = exports["default"];
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],6:[function(require,module,exports){
+},{"./config":3,"./sequence":8,"./tape":9}],6:[function(require,module,exports){
 var self = {};
 
 function render() {
@@ -453,7 +556,7 @@ Object.defineProperty(exports, "__esModule", {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _inlineWorker = require("./inline-worker");
+var _inlineWorker = require("inline-worker");
 
 var _inlineWorker2 = _interopRequireDefault(_inlineWorker);
 
@@ -467,17 +570,17 @@ var __callbacks = [];
 var __data = 1; // data 0 is reserved for silence
 
 worker.onmessage = function (e) {
-  var audioData = e.data.buffers.map(function (buffer) {
+  var channleData = e.data.buffers.map(function (buffer) {
     return new Float32Array(buffer);
   });
-  __callbacks[e.data.callbackId](audioData);
+  __callbacks[e.data.callbackId](channleData);
   __callbacks[e.data.callbackId] = null;
 };
 
 exports["default"] = {
-  transfer: function transfer(audioData) {
+  transfer: function transfer(audiodata) {
     var data = __data++;
-    var buffers = audioData.map(function (array) {
+    var buffers = audiodata.channelData.map(function (array) {
       return array.buffer;
     });
     worker.postMessage({ type: "transfer", data: data, buffers: buffers }, buffers);
@@ -495,9 +598,10 @@ exports["default"] = {
       __callbacks[callbackId] = resolve;
     });
   },
-  util: _renderWorker2["default"].util };
+  util: _renderWorker2["default"].util
+};
 module.exports = exports["default"];
-},{"./inline-worker":5,"./render-worker":6}],8:[function(require,module,exports){
+},{"./render-worker":6,"inline-worker":12}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -622,64 +726,59 @@ var Sequence = (function () {
 
 exports["default"] = Sequence;
 module.exports = exports["default"];
-},{"./config":2,"./tape":9}],9:[function(require,module,exports){
+},{"./config":3,"./tape":9}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _get = function get(_x14, _x15, _x16) { var _again = true; _function: while (_again) { var object = _x14, property = _x15, receiver = _x16; desc = parent = getter = undefined; _again = false; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x14 = parent; _x15 = property; _x16 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var _audiodata = require("audiodata");
+
+var _audiodata2 = _interopRequireDefault(_audiodata);
 
 var _track = require("./track");
 
 var _track2 = _interopRequireDefault(_track);
 
+var _fragment = require("./fragment");
+
+var _fragment2 = _interopRequireDefault(_fragment);
+
 var _config = require("./config");
 
 var _config2 = _interopRequireDefault(_config);
 
+var _renderer = require("./renderer");
+
+var _renderer2 = _interopRequireDefault(_renderer);
+
 var util = {};
 
 var Tape = (function () {
-  function Tape(numberOfChannels, sampleRate) {
+  function Tape(arg1, arg2) {
     _classCallCheck(this, Tape);
 
+    if (_audiodata2["default"].isAudioData(arg1)) {
+      return new TransferredTape(arg1);
+    }
+
     this.tracks = [new _track2["default"]()];
-    this._numberOfChannels = Math.max(1, numberOfChannels | 0);
-    this._sampleRate = Math.max(0, sampleRate | 0) || _config2["default"].sampleRate;
+    this._numberOfChannels = Math.max(1, arg1 | 0);
+    this._sampleRate = Math.max(0, arg2 | 0) || _config2["default"].sampleRate;
   }
 
   _createClass(Tape, [{
-    key: "sampleRate",
-    get: function () {
-      return this._sampleRate || _config2["default"].sampleRate;
-    }
-  }, {
-    key: "length",
-    get: function () {
-      return Math.floor(this.duration * this.sampleRate);
-    }
-  }, {
-    key: "duration",
-    get: function () {
-      return this.tracks[0].duration;
-    }
-  }, {
-    key: "numberOfChannels",
-    get: function () {
-      return this._numberOfChannels;
-    }
-  }, {
-    key: "numberOfTracks",
-    get: function () {
-      return this.tracks.length;
-    }
-  }, {
     key: "gain",
     value: function gain() {
       var _gain = arguments[0] === undefined ? 1 : arguments[0];
@@ -951,7 +1050,7 @@ var Tape = (function () {
       }
 
       if (_config2["default"].render) {
-        return _config2["default"].render.apply(null, [this.toJSON()].concat(args));
+        return _config2["default"].render.apply(_config2["default"], [this.toJSON()].concat(args));
       }
       return new Promise(function (resolve, reject) {
         reject(new Error("not implemented"));
@@ -981,19 +1080,32 @@ var Tape = (function () {
 
       return { tracks: tracks, duration: duration, sampleRate: sampleRate, numberOfChannels: numberOfChannels };
     }
-  }], [{
-    key: "from",
-    value: function from() {
-      for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-        args[_key4] = arguments[_key4];
-      }
-
-      if (_config2["default"].from) {
-        return _config2["default"].from.apply(null, args);
-      }
-      return Promise.resolve(new Tape(args[0], args[1]));
+  }, {
+    key: "sampleRate",
+    get: function () {
+      return this._sampleRate || _config2["default"].sampleRate;
     }
   }, {
+    key: "length",
+    get: function () {
+      return Math.floor(this.duration * this.sampleRate);
+    }
+  }, {
+    key: "duration",
+    get: function () {
+      return this.tracks[0].duration;
+    }
+  }, {
+    key: "numberOfChannels",
+    get: function () {
+      return this._numberOfChannels;
+    }
+  }, {
+    key: "numberOfTracks",
+    get: function () {
+      return this.tracks.length;
+    }
+  }], [{
     key: "silence",
     value: function silence(duration) {
       return new Tape(1, _config2["default"].sampleRate).silence(duration);
@@ -1001,20 +1113,24 @@ var Tape = (function () {
   }, {
     key: "concat",
     value: function concat() {
-      for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-        args[_key5] = arguments[_key5];
+      var _ref;
+
+      for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+        args[_key4] = arguments[_key4];
       }
 
-      return Tape.prototype.concat.apply(new Tape(1, _config2["default"].sampleRate), args);
+      return (_ref = new Tape(1, _config2["default"].sampleRate)).concat.apply(_ref, args);
     }
   }, {
     key: "mix",
     value: function mix() {
-      for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-        args[_key6] = arguments[_key6];
+      var _ref2;
+
+      for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+        args[_key5] = arguments[_key5];
       }
 
-      var newInstance = Tape.prototype.mix.apply(new Tape(1, _config2["default"].sampleRate), args);
+      var newInstance = (_ref2 = new Tape(1, _config2["default"].sampleRate)).mix.apply(_ref2, args);
 
       if (1 < newInstance.tracks.length) {
         newInstance.tracks.shift(); // remove first empty track
@@ -1028,6 +1144,35 @@ var Tape = (function () {
 })();
 
 exports["default"] = Tape;
+
+var TransferredTape = (function (_Tape) {
+  function TransferredTape(audiodata) {
+    _classCallCheck(this, TransferredTape);
+
+    _get(Object.getPrototypeOf(TransferredTape.prototype), "constructor", this).call(this, _audiodata2["default"].getNumberOfChannels(audiodata), audiodata.sampleRate);
+
+    var duration = _audiodata2["default"].getDuration(audiodata);
+
+    this._data = _renderer2["default"].transfer(audiodata);
+
+    this.tracks[0].addFragment(new _fragment2["default"](this._data, 0, duration));
+
+    _config2["default"].sampleRate = _config2["default"].sampleRate || audiodata.sampleRate;
+  }
+
+  _inherits(TransferredTape, _Tape);
+
+  _createClass(TransferredTape, [{
+    key: "dispose",
+    value: function dispose() {
+      _renderer2["default"].dispose(this._data);
+    }
+  }]);
+
+  return TransferredTape;
+})(Tape);
+
+exports.TransferredTape = TransferredTape;
 
 util.toNumber = function (num) {
   return +num || 0;
@@ -1066,10 +1211,9 @@ util.adjustDuration = function (tape, duration, method) {
       return tape.concat(tape.silence(duration - tape.duration));
   }
 };
-module.exports = exports["default"];
 
 /* subclass responsibility */
-},{"./config":2,"./track":10}],10:[function(require,module,exports){
+},{"./config":3,"./fragment":4,"./renderer":7,"./track":10,"audiodata":11}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1204,145 +1348,132 @@ var Track = (function () {
 
 exports["default"] = Track;
 module.exports = exports["default"];
-},{"./fragment":3}],11:[function(require,module,exports){
+},{"./fragment":4}],11:[function(require,module,exports){
+function isAudioData(obj) {
+  return !!(obj && typeof obj.sampleRate === "number" && Array.isArray(obj.channelData));
+}
+
+function getSampleRate(audiodata) {
+  return audiodata.sampleRate;
+}
+
+function getNumberOfChannels(audiodata) {
+  return audiodata.channelData.length;
+}
+
+function getLength(audiodata) {
+  return audiodata.channelData[0].length;
+}
+
+function getDuration(audiodata) {
+  return audiodata.channelData[0].length / audiodata.sampleRate;
+}
+
+function getChannelData(audiodata, channels) {
+  return audiodata.channelData[channels];
+}
+
+function toAudioBuffer(audiodata, audioContext) {
+  var numberOfChannels = getNumberOfChannels(audiodata);
+  var length = getLength(audiodata);
+  var sampleRate = getSampleRate(audiodata);
+  var audioBuffer = audioContext.createBuffer(numberOfChannels, length, sampleRate);
+  var i;
+
+  if (audioBuffer.copyToChannel) {
+    for (i = 0; i < numberOfChannels; i++) {
+      audioBuffer.copyToChannel(getChannelData(audiodata, i), i);
+    }
+  } else {
+    for (i = 0; i < numberOfChannels; i++) {
+      audioBuffer.getChannelData(i).set(getChannelData(audiodata, i));
+    }
+  }
+
+  return audioBuffer;
+}
+
+function fromAudioBuffer(audioBuffer) {
+  var sampleRate = audioBuffer.sampleRate;
+  var channelData = new Array(audioBuffer.numberOfChannels);
+  var i;
+
+  for (i = 0; i < channelData.length; i++) {
+    channelData[i] = audioBuffer.getChannelData(i);
+  }
+
+  return {
+    sampleRate: sampleRate,
+    channelData: channelData,
+  };
+}
+
+module.exports = {
+  isAudioData: isAudioData,
+  getSampleRate: getSampleRate,
+  getNumberOfChannels: getNumberOfChannels,
+  getLength: getLength,
+  getDuration: getDuration,
+  getChannelData: getChannelData,
+  toAudioBuffer: toAudioBuffer,
+  fromAudioBuffer: fromAudioBuffer,
+};
+
+},{}],12:[function(require,module,exports){
+"use strict";
+
+module.exports = require("./inline-worker");
+},{"./inline-worker":13}],13:[function(require,module,exports){
 (function (global){
 "use strict";
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
+var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
-var _get = function get(_x3, _x4, _x5) { var _again = true; _function: while (_again) { var object = _x3, property = _x4, receiver = _x5; desc = parent = getter = undefined; _again = false; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x3 = parent; _x4 = property; _x5 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+var WORKER_ENABLED = !!(global === global.window && global.URL && global.Blob && global.Worker);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+var InlineWorker = (function () {
+  function InlineWorker(func, self) {
+    var _this = this;
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+    _classCallCheck(this, InlineWorker);
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+    if (WORKER_ENABLED) {
+      var functionBody = func.toString().trim().match(/^function\s*\w*\s*\([\w\s,]*\)\s*{([\w\W]*?)}$/)[1];
+      var url = global.URL.createObjectURL(new global.Blob([functionBody], { type: "text/javascript" }));
 
-var _tape = require("./tape");
-
-var _tape2 = _interopRequireDefault(_tape);
-
-var _fragment = require("./fragment");
-
-var _fragment2 = _interopRequireDefault(_fragment);
-
-var _config = require("./config");
-
-var _config2 = _interopRequireDefault(_config);
-
-var _renderer = require("./renderer");
-
-var _renderer2 = _interopRequireDefault(_renderer);
-
-var _audioContext = null;
-
-var WebAudioTape = (function (_Tape) {
-  function WebAudioTape(audioBuffer) {
-    _classCallCheck(this, WebAudioTape);
-
-    _get(Object.getPrototypeOf(WebAudioTape.prototype), "constructor", this).call(this, audioBuffer.numberOfChannels, audioBuffer.sampleRate);
-
-    var audioData = new Array(audioBuffer.numberOfChannels);
-    for (var i = 0; i < audioData.length; i++) {
-      audioData[i] = audioBuffer.getChannelData(i);
+      return new global.Worker(url);
     }
 
-    this._data = _renderer2["default"].transfer(audioData);
+    this.self = self;
+    this.self.postMessage = function (data) {
+      setTimeout(function () {
+        _this.onmessage({ data: data });
+      }, 0);
+    };
 
-    this.tracks[0].addFragment(new _fragment2["default"](this._data, 0, audioBuffer.duration));
-
-    _config2["default"].sampleRate = audioBuffer.sampleRate;
+    setTimeout(function () {
+      func.call(self);
+    }, 0);
   }
 
-  _inherits(WebAudioTape, _Tape);
+  _createClass(InlineWorker, {
+    postMessage: {
+      value: function postMessage(data) {
+        var _this = this;
 
-  _createClass(WebAudioTape, [{
-    key: "dispose",
-    value: function dispose() {
-      _renderer2["default"].dispose(this._data);
-    }
-  }]);
-
-  return WebAudioTape;
-})(_tape2["default"]);
-
-exports["default"] = WebAudioTape;
-var use = function use() {
-
-  function from(src) {
-    var audioContext = arguments[1] === undefined ? _audioContext : arguments[1];
-
-    if (src instanceof _tape2["default"]) {
-      return Promise.resolve(src.clone());
-    }
-    if (src instanceof global.AudioBuffer) {
-      return Promise.resolve(new WebAudioTape(src));
-    }
-    if (_audioContext === null) {
-      _audioContext = audioContext || new global.AudioContext();
-    }
-    if (src instanceof ArrayBuffer) {
-      return new Promise(function (resolve, reject) {
-        _audioContext.decodeAudioData(src, function (audioBuffer) {
-          resolve(audioBuffer);
-        }, reject);
-      }).then(from);
-    }
-    if (typeof src === "string") {
-      return new Promise(function (resolve, reject) {
-        var xhr = new global.XMLHttpRequest();
-        xhr.open("GET", src);
-        xhr.responseType = "arraybuffer";
-        xhr.onload = function () {
-          /* istanbul ignore else */
-          if (xhr.status === 200) {
-            resolve(xhr.response);
-          } else {
-            reject(new Error(xhr.statusText));
-          }
-        };
-        xhr.onerror = function () {
-          reject(new Error(xhr.statusText));
-        };
-        xhr.send();
-      }).then(from);
-    }
-    return Promise.reject(new Error("Invalid arguments"));
-  }
-
-  function render(tape, audioContext) {
-    var numberOfChannels = arguments[2] === undefined ? 0 : arguments[2];
-
-    numberOfChannels = Math.max(numberOfChannels, tape.numberOfChannels);
-
-    tape.numberOfChannels = numberOfChannels;
-
-    return _renderer2["default"].render(tape).then(function (audioData) {
-      var length = Math.floor(tape.duration * tape.sampleRate);
-      var audioBuffer = audioContext.createBuffer(numberOfChannels, length, tape.sampleRate);
-
-      if (audioBuffer.copyToChannel) {
-        for (var i = 0; i < numberOfChannels; i++) {
-          audioBuffer.copyToChannel(audioData[i], i);
-        }
-      } else {
-        for (var i = 0; i < numberOfChannels; i++) {
-          audioBuffer.getChannelData(i).set(audioData[i]);
-        }
+        setTimeout(function () {
+          _this.self.onmessage({ data: data });
+        }, 0);
       }
+    }
+  });
 
-      return audioBuffer;
-    });
-  }
+  return InlineWorker;
+})();
 
-  _config2["default"].from = from;
-  _config2["default"].render = render;
-};
-exports.use = use;
+module.exports = InlineWorker;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./config":2,"./fragment":3,"./renderer":7,"./tape":9}]},{},[1])(1)
+},{}]},{},[1])(1)
 });

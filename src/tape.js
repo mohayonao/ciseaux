@@ -1,26 +1,22 @@
+import AudioData from "audiodata";
 import Track from "./track";
+import Fragment from "./fragment";
 import config from "./config";
+import renderer from "./renderer";
 
 let util = {};
 
 export default class Tape {
-  static from(...args) {
-    if (config.from) {
-      return config.from.apply(null, args);
-    }
-    return Promise.resolve(new Tape(args[0], args[1]));
-  }
-
   static silence(duration) {
     return new Tape(1, config.sampleRate).silence(duration);
   }
 
   static concat(...args) {
-    return Tape.prototype.concat.apply(new Tape(1, config.sampleRate), args);
+    return new Tape(1, config.sampleRate).concat(...args);
   }
 
   static mix(...args) {
-    let newInstance = Tape.prototype.mix.apply(new Tape(1, config.sampleRate), args);
+    let newInstance = new Tape(1, config.sampleRate).mix(...args);
 
     if (1 < newInstance.tracks.length) {
       newInstance.tracks.shift(); // remove first empty track
@@ -29,10 +25,14 @@ export default class Tape {
     return newInstance;
   }
 
-  constructor(numberOfChannels, sampleRate) {
+  constructor(arg1, arg2) {
+    if (AudioData.isAudioData(arg1)) {
+      return new TransferredTape(arg1);
+    }
+
     this.tracks = [ new Track() ];
-    this._numberOfChannels = Math.max(1, numberOfChannels|0);
-    this._sampleRate = Math.max(0, sampleRate|0) || config.sampleRate;
+    this._numberOfChannels = Math.max(1, arg1|0);
+    this._sampleRate = Math.max(0, arg2|0) || config.sampleRate;
   }
 
   get sampleRate() {
@@ -256,7 +256,7 @@ export default class Tape {
 
   render(...args) {
     if (config.render) {
-      return config.render.apply(null, [ this.toJSON() ].concat(args));
+      return config.render(this.toJSON(), ...args);
     }
     return new Promise((resolve, reject) => {
       reject(new Error("not implemented"));
@@ -283,6 +283,24 @@ export default class Tape {
     }
 
     return { tracks, duration, sampleRate, numberOfChannels };
+  }
+}
+
+export class TransferredTape extends Tape {
+  constructor(audiodata) {
+    super(AudioData.getNumberOfChannels(audiodata), audiodata.sampleRate);
+
+    let duration = AudioData.getDuration(audiodata);
+
+    this._data = renderer.transfer(audiodata);
+
+    this.tracks[0].addFragment(new Fragment(this._data, 0, duration));
+
+    config.sampleRate = config.sampleRate || audiodata.sampleRate;
+  }
+
+  dispose() {
+    renderer.dispose(this._data);
   }
 }
 

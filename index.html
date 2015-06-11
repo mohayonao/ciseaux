@@ -68,6 +68,8 @@
     var AudioContext = window.AudioContext || window.webkitAudioContext;
     var audioContext = new AudioContext();
 
+    Ciseaux.context = audioContext;
+
     function fetch(url) {
       return new Promise(function(resolve, reject) {
         var xhr = new XMLHttpRequest();
@@ -126,7 +128,7 @@
 
           if (window.tape) {
             var _this = this;
-            window.tape.render(this.audioContext, 2).then(function(audioBuffer) {
+            window.tape.render(2).then(function(audioBuffer) {
               _this.draw(name, audioBuffer);
               _this.bufSrc = _this.audioContext.createBufferSource();
               _this.bufSrc.buffer = audioBuffer;
@@ -228,7 +230,7 @@
       "./sound/tape1.wav",
       "./sound/tape2.wav",
     ].map(function(url, index) {
-      Ciseaux.from(url, audioContext).then(function(tape) {
+      Ciseaux.from(url).then(function(tape) {
         window["tape" + (index + 1)] = tape;
       });
     }));

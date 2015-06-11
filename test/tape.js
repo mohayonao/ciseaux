@@ -1,5 +1,4 @@
 import assert from "power-assert";
-import sinon from "sinon";
 import config from "../src/config";
 import Fragment from "../src/fragment";
 import Tape from "../src/tape";
@@ -24,50 +23,7 @@ let createTapeFromList = (list) => {
   return tape;
 };
 
-class TestTape extends Tape {
-  constructor() {
-    super(2, 800);
-  }
-}
-
-describe.only("Tape", () => {
-  describe(".from(...args): Promise<Tape>", () => {
-    let config$from;
-    before(() => {
-      config$from = config.from;
-    });
-    after(() => {
-      config.from = config$from;
-    });
-    context("exists from", () => {
-      it("works", () => {
-        config.from = sinon.spy(() => {
-          return Promise.resolve(new TestTape());
-        });
-
-        let result = Tape.from();
-
-        assert(result instanceof Promise);
-
-        return result.then((tape) => {
-          assert(tape instanceof TestTape);
-        });
-      });
-    });
-    context("not exists from", () => {
-      it("works", () => {
-        config.from = null;
-
-        let result = Tape.from(2, 8000);
-
-        assert(result instanceof Promise);
-
-        return result.then((tape) => {
-          assert(tape instanceof Tape);
-        });
-      });
-    });
-  });
+describe("Tape", () => {
   describe(".silence(duration: number): Tape", () => {
     it("should create a silence Tape", () => {
       let silence = Tape.silence(20);

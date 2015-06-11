@@ -1,3 +1,3 @@
-require("./lib/web-audio-tape").use();
+require("./lib/browser-interface")();
 
 module.exports = require("./lib");
