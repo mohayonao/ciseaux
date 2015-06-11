@@ -7,13 +7,6 @@ import renderer from "./renderer";
 let util = {};
 
 export default class Tape {
-  static from(...args) {
-    if (config.from) {
-      return config.from(...args);
-    }
-    return Promise.resolve(new Tape(args[0], args[1]));
-  }
-
   static silence(duration) {
     return new Tape(1, config.sampleRate).silence(duration);
   }

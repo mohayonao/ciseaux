@@ -23,8 +23,13 @@ export default {
   Sequence,
   Tape,
 
-  from: Tape.from,
-  silence: Tape.silenct,
+  from: (...args) => {
+    if (config.from) {
+      return config.from(...args);
+    }
+    return Promise.resolve(new Tape(...args));
+  },
+  silence: Tape.silence,
   concat: Tape.concat,
   mix: Tape.mix,
 };
