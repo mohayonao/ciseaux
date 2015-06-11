@@ -1,8 +1,8 @@
 {
   "name": "ciseaux",
   "description": "utility to chop an audio buffer",
-  "version": "0.1.9",
-  "author": "nao yonamine <mohayonao@gmail.com>",
+  "version": "0.2.0",
+  "author": "Nao Yonamine <mohayonao@gmail.com>",
   "bugs": {
     "url": "https://github.com/mohayonao/ciseaux/issues"
   },
