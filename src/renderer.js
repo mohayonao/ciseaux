@@ -1,4 +1,4 @@
-import InlineWorker from "./inline-worker";
+import InlineWorker from "inline-worker";
 import render from "./render-worker";
 
 let worker = new InlineWorker(render, render.self);
