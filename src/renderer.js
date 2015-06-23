@@ -1,7 +1,7 @@
-import InlineWorker from "inline-worker";
+import OUroborosWorker from "ouroboros-worker";
 import render from "./render-worker";
 
-let worker = new InlineWorker(render, render.self);
+let worker = new OUroborosWorker(render.self);
 
 let __callbacks = [];
 let __data = 1; // data 0 is reserved for silence
