@@ -13,11 +13,11 @@
     "wav-encoder": "^0.3.0"
   },
   "devDependencies": {
-    "babel": "^5.5.6",
-    "babel-eslint": "^3.1.15",
+    "babel": "^5.6.4",
+    "babel-eslint": "^3.1.17",
     "browserify": "^10.2.4",
     "coveralls": "^2.11.2",
-    "eslint": "^0.22.1",
+    "eslint": "^0.23.0",
     "espower-babel": "^3.2.0",
     "isparta": "^3.0.3",
     "mocha": "^2.2.5",
