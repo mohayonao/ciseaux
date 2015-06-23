@@ -6,7 +6,6 @@
   "rules": {
     // possible errors
     "comma-dangle": [ 2, "always-multiline" ],
-    "no-cond-assign": [ 2, "expect-parens" ],
     "no-console": 0,
     "no-extra-boolean-cast": 0,
 

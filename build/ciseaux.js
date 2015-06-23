@@ -202,7 +202,7 @@ var Fragment = (function () {
     }
   }, {
     key: "duration",
-    get: function () {
+    get: function get() {
       return (this.endTime - this.beginTime) / this.pitch;
     }
   }]);
@@ -263,10 +263,10 @@ exports["default"] = Object.defineProperties({
   mix: _tape2["default"].mix
 }, {
   context: {
-    get: function () {
+    get: function get() {
       return _config2["default"].context;
     },
-    set: function (audioContext) {
+    set: function set(audioContext) {
       if (AudioContext && audioContext instanceof AudioContext) {
         _config2["default"].context = audioContext;
       }
@@ -278,275 +278,282 @@ exports["default"] = Object.defineProperties({
 module.exports = exports["default"];
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./config":3,"./sequence":8,"./tape":9}],6:[function(require,module,exports){
-var self = {};
+(function (global){
+"use strict";
 
-function render() {
-  self.repository = [];
+var self = global.self || {};
 
-  self.onmessage = function(e) {
-    switch (e.data.type) {
-      case "transfer":
-        self.repository[e.data.data] = e.data.buffers.map(function(buffer) {
-          return new Float32Array(buffer);
-        });
-        break;
-      case "dispose":
-        delete self.repository[e.data.data];
-        break;
-      case "render":
-        self.startRendering(e.data.tape, e.data.callbackId);
-        break;
-      }
-  };
+var render = {};
 
-  self.startRendering = function(tape, callbackId) {
-    var destination = self.allocData(tape);
-    var buffers = destination.map(function(array) {
-      return array.buffer;
-    });
+self.repository = [];
 
-    self.render(tape, destination);
+self.onmessage = function (e) {
+  switch (e.data.type) {
+    case "transfer":
+      self.repository[e.data.data] = e.data.buffers.map(function (buffer) {
+        return new Float32Array(buffer);
+      });
+      break;
+    case "dispose":
+      delete self.repository[e.data.data];
+      break;
+    case "render":
+      self.startRendering(e.data.tape, e.data.callbackId);
+      break;
+  }
+};
 
-    self.postMessage({ callbackId: callbackId, buffers: buffers }, buffers);
-  };
+self.startRendering = function (tape, callbackId) {
+  var destination = self.allocData(tape);
+  var buffers = destination.map(function (array) {
+    return array.buffer;
+  });
 
-  self.allocData = function(tape) {
-    var data = new Array(tape.numberOfChannels);
-    var length = Math.floor(tape.duration * tape.sampleRate);
+  self.render(tape, destination);
 
-    for (var i = 0; i < data.length; i++) {
-      data[i] = new Float32Array(length);
+  self.postMessage({ callbackId: callbackId, buffers: buffers }, buffers);
+};
+
+self.allocData = function (tape) {
+  var data = new Array(tape.numberOfChannels);
+  var length = Math.floor(tape.duration * tape.sampleRate);
+
+  for (var i = 0; i < data.length; i++) {
+    data[i] = new Float32Array(length);
+  }
+
+  return data;
+};
+
+self.render = function (tape, destination) {
+  for (var i = 0; i < tape.tracks.length; i++) {
+    self.renderTrack(i, tape.tracks[i], destination, tape.sampleRate);
+  }
+};
+
+self.renderTrack = function (trackNum, fragments, destination, sampleRate) {
+  var usePan = fragments.some(function (fragment) {
+    return fragment.pan !== 0;
+  });
+  var pos = 0;
+
+  for (var i = 0, imax = fragments.length; i < imax; i++) {
+    var fragment = fragments[i];
+    var source = self.repository[fragment.data];
+    var duration = (fragment.endTime - fragment.beginTime) / fragment.pitch;
+    var _length = Math.floor(duration * sampleRate);
+
+    if (!source) {
+      pos += _length;
+      continue;
     }
 
-    return data;
-  };
+    var begin = Math.floor(fragment.beginTime * sampleRate);
+    var end = Math.floor(fragment.endTime * sampleRate);
+    var srcCh = source.length;
+    var dstCh = destination.length;
+    var srcSub = self.subarray(source, begin, end);
+    var dstSub = self.subarray(destination, pos, pos + _length);
+    var pitch = fragment.pitch;
 
-  self.render = function(tape, destination) {
-    for (var i = 0; i < tape.tracks.length; i++) {
-      self.renderTrack(i, tape.tracks[i], destination, tape.sampleRate);
+    /** TODO: implements
+    if (fragment.stretch) {
+      srcSub = self.stretch(srcSub, length);
+      pitch = 1;
     }
-  };
+    **/
 
-  self.renderTrack = function(trackNum, fragments, destination, sampleRate) {
-    var usePan = fragments.some(function(fragment) {
-      return fragment.pan !== 0;
-    });
+    var canSimpleCopy = trackNum === 0 && pitch === 1 && !usePan && fragment.gain === 1 && !fragment.reverse && srcCh <= dstCh && srcSub[0].length === dstSub[0].length;
 
-    var pos = 0;
-
-    for (var i = 0, imax = fragments.length; i < imax; i++) {
-      var fragment = fragments[i];
-      var source = self.repository[fragment.data];
-      var duration = (fragment.endTime - fragment.beginTime) / fragment.pitch;
-      var length = Math.floor(duration * sampleRate);
-
-      if (!source) {
-        pos += length;
-        continue;
-      }
-
-      var begin = Math.floor(fragment.beginTime * sampleRate);
-      var end = Math.floor(fragment.endTime * sampleRate);
-      var srcCh = source.length;
-      var dstCh = destination.length;
-      var srcSub = self.subarray(source, begin, end);
-      var dstSub = self.subarray(destination, pos, pos + length);
-      var pitch = fragment.pitch;
-
-      /** TODO: implements
-      if (fragment.stretch) {
-        srcSub = self.stretch(srcSub, length);
-        pitch = 1;
-      }
-      **/
-
-      var canSimpleCopy = trackNum === 0 && pitch === 1 && !usePan && fragment.gain === 1 && !fragment.reverse && srcCh <= dstCh && srcSub[0].length === dstSub[0].length;
-
-      if (canSimpleCopy) {
-        self.mix[srcSub.length + "->" + dstSub.length](srcSub, dstSub);
-      } else {
-        self.process(srcSub, dstSub, {
-          gain: fragment.gain,
-          pan: usePan ? Math.max(-1, Math.min(fragment.pan, +1)) : null,
-          reverse: !!fragment.reverse,
-        });
-      }
-
-      pos += length;
-    }
-  };
-
-  self.subarray = function(array, begin, end) {
-    var subarray = new Array(array.length);
-
-    for (var i = 0; i < subarray.length; i++) {
-      subarray[i] = array[i].subarray(begin, end);
+    if (canSimpleCopy) {
+      self.mix[srcSub.length + "->" + dstSub.length](srcSub, dstSub);
+    } else {
+      self.process(srcSub, dstSub, {
+        gain: fragment.gain,
+        pan: usePan ? Math.max(-1, Math.min(fragment.pan, +1)) : null,
+        reverse: !!fragment.reverse
+      });
     }
 
-    return subarray;
-  };
+    pos += _length;
+  }
+};
 
-  self.process = function(src, dst, opts) {
-    var samples = new Array(src.length);
-    var srcCh = src.length;
-    var dstCh = dst.length;
-    var mixCh;
-    var srcLength = src[0].length;
-    var dstLength = dst[0].length;
-    var factor = (srcLength - 1) / (dstLength - 1);
-    var index, step, ch, mix, l, r;
+self.subarray = function (array, begin, end) {
+  var subarray = new Array(array.length);
+
+  for (var i = 0; i < subarray.length; i++) {
+    subarray[i] = array[i].subarray(begin, end);
+  }
+
+  return subarray;
+};
+
+self.process = function (src, dst, opts) {
+  var samples = new Array(src.length);
+  var srcCh = src.length;
+  var dstCh = dst.length;
+  var mixCh = undefined;
+  var srcLength = src[0].length;
+  var dstLength = dst[0].length;
+  var factor = (srcLength - 1) / (dstLength - 1);
+  var index = undefined,
+      step = undefined,
+      ch = undefined,
+      mix = undefined,
+      l = undefined,
+      r = undefined;
+
+  if (opts.pan !== null) {
+    l = Math.cos((opts.pan + 1) * 0.25 * Math.PI);
+    r = Math.sin((opts.pan + 1) * 0.25 * Math.PI);
+    mixCh = Math.max(srcCh, 2);
+  } else {
+    mixCh = srcCh;
+  }
+  mix = self.mix1[mixCh + "->" + dstCh] || self.mix1.nop;
+
+  if (opts.reverse) {
+    index = dst[0].length - 1;
+    step = -1;
+  } else {
+    index = 0;
+    step = +1;
+  }
+
+  for (var i = 0; i < dstLength; i++, index += step) {
+    var x0 = i * factor;
+    var i0 = x0 | 0;
+    var i1 = Math.min(i0 + 1, srcLength - 1);
+
+    for (ch = 0; ch < srcCh; ch++) {
+      samples[ch] = src[ch][i0] + Math.abs(x0 - i0) * (src[ch][i1] - src[ch][i0]);
+    }
 
     if (opts.pan !== null) {
-      l = Math.cos((opts.pan + 1) * 0.25 * Math.PI);
-      r = Math.sin((opts.pan + 1) * 0.25 * Math.PI);
-      mixCh = Math.max(srcCh, 2);
-    } else {
-      mixCh = srcCh;
-    }
-    mix = self.mix1[mixCh + "->" + dstCh] || self.mix1.nop;
-
-    if (opts.reverse) {
-      index = dst[0].length - 1;
-      step = -1;
-    } else {
-      index = 0;
-      step = +1;
+      samples = self.pan[srcCh](samples, l, r);
     }
 
-    for (var i = 0; i < dstLength; i++, index += step) {
-      var x0 = i * factor;
-      var i0 = x0|0;
-      var i1 = Math.min(i0 + 1, srcLength - 1);
+    var values = mix(samples);
 
-      for (ch = 0; ch < srcCh; ch++) {
-        samples[ch] = src[ch][i0] + Math.abs(x0 - i0) * (src[ch][i1] - src[ch][i0]);
-      }
-
-      if (opts.pan !== null) {
-        samples = self.pan[srcCh](samples, l, r);
-      }
-
-      var values = mix(samples);
-
-      for (ch = 0; ch < dstCh; ch++) {
-        dst[ch][index] += (values[ch] || 0) * opts.gain;
-      }
+    for (ch = 0; ch < dstCh; ch++) {
+      dst[ch][index] += (values[ch] || 0) * opts.gain;
     }
-  };
+  }
+};
 
-  self.pan = [];
-  self.pan[1] = function(src, l, r) {
-    return [ src[0] * l, src[0] * r ];
-  };
-  self.pan[2] = function(src, l, r) {
-    var x = (src[0] + src[1]) * 0.5;
-    return [ x * l, x * r ];
-  };
-  self.pan[4] = function(src, l, r) {
-    var x = (src[0] + src[1]) * 0.5;
-    var y = (src[2] + src[3]) * 0.5;
-    return [ x * l, x * r , y * l, y * r ];
-  };
-  self.pan[6] = function(src, l, r) {
-    var x = (src[0] + src[1]) * 0.5;
-    var y = (src[4] + src[5]) * 0.5;
-    return [ x * l, x * r , src[2], src[3], y * l, y * r ];
-  };
+self.pan = [];
+self.pan[1] = function (src, l, r) {
+  return [src[0] * l, src[0] * r];
+};
+self.pan[2] = function (src, l, r) {
+  var x = (src[0] + src[1]) * 0.5;
+  return [x * l, x * r];
+};
+self.pan[4] = function (src, l, r) {
+  var x = (src[0] + src[1]) * 0.5;
+  var y = (src[2] + src[3]) * 0.5;
+  return [x * l, x * r, y * l, y * r];
+};
+self.pan[6] = function (src, l, r) {
+  var x = (src[0] + src[1]) * 0.5;
+  var y = (src[4] + src[5]) * 0.5;
+  return [x * l, x * r, src[2], src[3], y * l, y * r];
+};
 
-  self.mix = {};
-  self.mix["1->1"] = function(src, dst) {
-    dst[0].set(src[0]);
-  };
-  self.mix["1->2"] = function(src, dst) {
-    dst[0].set(src[0]);
-    dst[1].set(src[0]);
-  };
-  self.mix["1->4"] = function(src, dst) {
-    dst[0].set(src[0]);
-    dst[1].set(src[0]);
-  };
-  self.mix["1->6"] = function(src, dst) {
-    dst[2].set(src[0]);
-  };
-  self.mix["2->2"] = function(src, dst) {
-    dst[0].set(src[0]);
-    dst[1].set(src[1]);
-  };
-  self.mix["2->4"] = function(src, dst) {
-    dst[0].set(src[0]);
-    dst[1].set(src[1]);
-  };
-  self.mix["2->6"] = function(src, dst) {
-    dst[0].set(src[0]);
-    dst[1].set(src[1]);
-  };
-  self.mix["4->4"] = function(src, dst) {
-    dst[0].set(src[0]);
-    dst[1].set(src[1]);
-    dst[2].set(src[2]);
-    dst[3].set(src[3]);
-  };
-  self.mix["4->6"] = function(src, dst) {
-    dst[0].set(src[0]);
-    dst[1].set(src[1]);
-    dst[4].set(src[2]);
-    dst[5].set(src[3]);
-  };
-  self.mix["6->6"] = function(src, dst) {
-    dst[0].set(src[0]);
-    dst[1].set(src[1]);
-    dst[2].set(src[2]);
-    dst[3].set(src[3]);
-    dst[4].set(src[4]);
-    dst[5].set(src[5]);
-  };
+self.mix = {};
+self.mix["1->1"] = function (src, dst) {
+  dst[0].set(src[0]);
+};
+self.mix["1->2"] = function (src, dst) {
+  dst[0].set(src[0]);
+  dst[1].set(src[0]);
+};
+self.mix["1->4"] = function (src, dst) {
+  dst[0].set(src[0]);
+  dst[1].set(src[0]);
+};
+self.mix["1->6"] = function (src, dst) {
+  dst[2].set(src[0]);
+};
+self.mix["2->2"] = function (src, dst) {
+  dst[0].set(src[0]);
+  dst[1].set(src[1]);
+};
+self.mix["2->4"] = function (src, dst) {
+  dst[0].set(src[0]);
+  dst[1].set(src[1]);
+};
+self.mix["2->6"] = function (src, dst) {
+  dst[0].set(src[0]);
+  dst[1].set(src[1]);
+};
+self.mix["4->4"] = function (src, dst) {
+  dst[0].set(src[0]);
+  dst[1].set(src[1]);
+  dst[2].set(src[2]);
+  dst[3].set(src[3]);
+};
+self.mix["4->6"] = function (src, dst) {
+  dst[0].set(src[0]);
+  dst[1].set(src[1]);
+  dst[4].set(src[2]);
+  dst[5].set(src[3]);
+};
+self.mix["6->6"] = function (src, dst) {
+  dst[0].set(src[0]);
+  dst[1].set(src[1]);
+  dst[2].set(src[2]);
+  dst[3].set(src[3]);
+  dst[4].set(src[4]);
+  dst[5].set(src[5]);
+};
 
-  self.mix1 = {};
-  self.mix1.nop = function(src) {
-    return src;
-  };
-  self.mix1["1->2"] = function(src) {
-    return [ src[0], src[0] ];
-  };
-  self.mix1["1->4"] = function(src) {
-    return [ src[0], src[0], 0, 0 ];
-  };
-  self.mix1["1->6"] = function(src) {
-    return [ 0, 0, src[0], 0, 0, 0 ];
-  };
-  self.mix1["2->4"] = function(src) {
-    return [ src[0], src[1], 0, 0 ];
-  };
-  self.mix1["2->6"] = function(src) {
-    return [ src[0], src[1], 0, 0, 0, 0 ];
-  };
-  self.mix1["4->6"] = function(src) {
-    return [ src[0], src[1], 0, 0, src[2], src[3] ];
-  };
-  self.mix1["2->1"] = function(src) {
-    return [ 0.5 * (src[0] + src[1]) ];
-  };
-  self.mix1["4->1"] = function(src) {
-    return [ 0.25 * (src[0] + src[1] + src[2] + src[3]) ];
-  };
-  self.mix1["6->1"] = function(src) {
-    return [ 0.7071 * (src[0] + src[1]) + src[2] + 0.5 * (src[4] + src[5]) ];
-  };
-  self.mix1["4->2"] = function(src) {
-    return [ 0.5 * (src[0] + src[2]), 0.5 * (src[1] + src[3]) ];
-  };
-  self.mix1["6->2"] = function(src) {
-    return [ src[0] + 0.7071 * (src[2] + src[4]), src[1] + 0.7071 * (src[2] + src[5]) ];
-  };
-  self.mix1["6->4"] = function(src) {
-    return [ src[0] + 0.7071 * src[2], src[1] + 0.7071 * src[2], src[4], src[5] ];
-  };
-}
+self.mix1 = {};
+self.mix1.nop = function (src) {
+  return src;
+};
+self.mix1["1->2"] = function (src) {
+  return [src[0], src[0]];
+};
+self.mix1["1->4"] = function (src) {
+  return [src[0], src[0], 0, 0];
+};
+self.mix1["1->6"] = function (src) {
+  return [0, 0, src[0], 0, 0, 0];
+};
+self.mix1["2->4"] = function (src) {
+  return [src[0], src[1], 0, 0];
+};
+self.mix1["2->6"] = function (src) {
+  return [src[0], src[1], 0, 0, 0, 0];
+};
+self.mix1["4->6"] = function (src) {
+  return [src[0], src[1], 0, 0, src[2], src[3]];
+};
+self.mix1["2->1"] = function (src) {
+  return [0.5 * (src[0] + src[1])];
+};
+self.mix1["4->1"] = function (src) {
+  return [0.25 * (src[0] + src[1] + src[2] + src[3])];
+};
+self.mix1["6->1"] = function (src) {
+  return [0.7071 * (src[0] + src[1]) + src[2] + 0.5 * (src[4] + src[5])];
+};
+self.mix1["4->2"] = function (src) {
+  return [0.5 * (src[0] + src[2]), 0.5 * (src[1] + src[3])];
+};
+self.mix1["6->2"] = function (src) {
+  return [src[0] + 0.7071 * (src[2] + src[4]), src[1] + 0.7071 * (src[2] + src[5])];
+};
+self.mix1["6->4"] = function (src) {
+  return [src[0] + 0.7071 * src[2], src[1] + 0.7071 * src[2], src[4], src[5]];
+};
 
 render.self = render.util = self;
 
 module.exports = render;
-
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],7:[function(require,module,exports){
 "use strict";
 
@@ -556,15 +563,15 @@ Object.defineProperty(exports, "__esModule", {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _inlineWorker = require("inline-worker");
+var _ouroborosWorker = require("ouroboros-worker");
 
-var _inlineWorker2 = _interopRequireDefault(_inlineWorker);
+var _ouroborosWorker2 = _interopRequireDefault(_ouroborosWorker);
 
 var _renderWorker = require("./render-worker");
 
 var _renderWorker2 = _interopRequireDefault(_renderWorker);
 
-var worker = new _inlineWorker2["default"](_renderWorker2["default"], _renderWorker2["default"].self);
+var worker = new _ouroborosWorker2["default"](_renderWorker2["default"].self);
 
 var __callbacks = [];
 var __data = 1; // data 0 is reserved for silence
@@ -601,7 +608,7 @@ exports["default"] = {
   util: _renderWorker2["default"].util
 };
 module.exports = exports["default"];
-},{"./render-worker":6,"inline-worker":12}],8:[function(require,module,exports){
+},{"./render-worker":6,"ouroboros-worker":12}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -655,13 +662,14 @@ var Sequence = (function () {
   function Sequence() {
     var _this = this;
 
+    _classCallCheck(this, Sequence);
+
+    this.pattern = this.instruments = this.durationPerStep = null;
+
     for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
       args[_key] = arguments[_key];
     }
 
-    _classCallCheck(this, Sequence);
-
-    this.pattern = this.instruments = this.durationPerStep = null;
     args.forEach(function (arg) {
       if (typeof arg === "string") {
         _this.pattern = arg;
@@ -676,13 +684,13 @@ var Sequence = (function () {
   _createClass(Sequence, [{
     key: "apply",
     value: function apply() {
-      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        args[_key2] = arguments[_key2];
-      }
-
       var pattern = this.pattern;
       var instruments = this.instruments;
       var durationPerStep = this.durationPerStep;
+
+      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        args[_key2] = arguments[_key2];
+      }
 
       args.forEach(function (arg) {
         if (typeof arg === "string") {
@@ -733,7 +741,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _get = function get(_x14, _x15, _x16) { var _again = true; _function: while (_again) { var object = _x14, property = _x15, receiver = _x16; desc = parent = getter = undefined; _again = false; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x14 = parent; _x15 = property; _x16 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+var _get = function get(_x14, _x15, _x16) { var _again = true; _function: while (_again) { var object = _x14, property = _x15, receiver = _x16; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x14 = parent; _x15 = property; _x16 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -1045,11 +1053,11 @@ var Tape = (function () {
   }, {
     key: "render",
     value: function render() {
-      for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        args[_key3] = arguments[_key3];
-      }
-
       if (_config2["default"].render) {
+        for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+          args[_key3] = arguments[_key3];
+        }
+
         return _config2["default"].render.apply(_config2["default"], [this.toJSON()].concat(args));
       }
       return new Promise(function (resolve, reject) {
@@ -1082,27 +1090,27 @@ var Tape = (function () {
     }
   }, {
     key: "sampleRate",
-    get: function () {
+    get: function get() {
       return this._sampleRate || _config2["default"].sampleRate;
     }
   }, {
     key: "length",
-    get: function () {
+    get: function get() {
       return Math.floor(this.duration * this.sampleRate);
     }
   }, {
     key: "duration",
-    get: function () {
+    get: function get() {
       return this.tracks[0].duration;
     }
   }, {
     key: "numberOfChannels",
-    get: function () {
+    get: function get() {
       return this._numberOfChannels;
     }
   }, {
     key: "numberOfTracks",
-    get: function () {
+    get: function get() {
       return this.tracks.length;
     }
   }], [{
@@ -1115,22 +1123,14 @@ var Tape = (function () {
     value: function concat() {
       var _ref;
 
-      for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-        args[_key4] = arguments[_key4];
-      }
-
-      return (_ref = new Tape(1, _config2["default"].sampleRate)).concat.apply(_ref, args);
+      return (_ref = new Tape(1, _config2["default"].sampleRate)).concat.apply(_ref, arguments);
     }
   }, {
     key: "mix",
     value: function mix() {
       var _ref2;
 
-      for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-        args[_key5] = arguments[_key5];
-      }
-
-      var newInstance = (_ref2 = new Tape(1, _config2["default"].sampleRate)).mix.apply(_ref2, args);
+      var newInstance = (_ref2 = new Tape(1, _config2["default"].sampleRate)).mix.apply(_ref2, arguments);
 
       if (1 < newInstance.tracks.length) {
         newInstance.tracks.shift(); // remove first empty track
@@ -1420,60 +1420,74 @@ module.exports = {
 };
 
 },{}],12:[function(require,module,exports){
-"use strict";
+module.exports = require("./lib/ouroboros-worker");
 
-module.exports = require("./inline-worker");
-},{"./inline-worker":13}],13:[function(require,module,exports){
+},{"./lib/ouroboros-worker":13}],13:[function(require,module,exports){
 (function (global){
 "use strict";
 
-var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
-var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-var WORKER_ENABLED = !!(global === global.window && global.URL && global.Blob && global.Worker);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var InlineWorker = (function () {
-  function InlineWorker(func, self) {
+var WORKER_ENABLED = !!(global === global.window && global.URL && global.Worker);
+var IN_WORKER_CONTEXT = !!(global === global.self && global.location);
+
+var pathname = WORKER_ENABLED && (function () {
+  var scripts = global.document.getElementsByTagName("script");
+  var script = scripts[scripts.length - 1].src;
+
+  return new global.URL(script).pathname;
+})();
+
+var OUroborosWorker = (function () {
+  function OUroborosWorker() {
     var _this = this;
 
-    _classCallCheck(this, InlineWorker);
+    var self = arguments[0] === undefined ? {} : arguments[0];
+
+    _classCallCheck(this, OUroborosWorker);
 
     if (WORKER_ENABLED) {
-      var functionBody = func.toString().trim().match(/^function\s*\w*\s*\([\w\s,]*\)\s*{([\w\W]*?)}$/)[1];
-      var url = global.URL.createObjectURL(new global.Blob([functionBody], { type: "text/javascript" }));
+      return new global.Worker(pathname);
+    }
 
-      return new global.Worker(url);
+    if (IN_WORKER_CONTEXT) {
+      return {};
     }
 
     this.self = self;
     this.self.postMessage = function (data) {
       setTimeout(function () {
-        _this.onmessage({ data: data });
+        if (typeof _this.onmessage === "function") {
+          _this.onmessage({ data: data });
+        }
       }, 0);
     };
-
-    setTimeout(function () {
-      func.call(self);
-    }, 0);
   }
 
-  _createClass(InlineWorker, {
-    postMessage: {
-      value: function postMessage(data) {
-        var _this = this;
+  _createClass(OUroborosWorker, [{
+    key: "postMessage",
+    value: function postMessage(data) {
+      var _this2 = this;
 
-        setTimeout(function () {
-          _this.self.onmessage({ data: data });
-        }, 0);
-      }
+      setTimeout(function () {
+        if (typeof _this2.self.onmessage === "function") {
+          _this2.self.onmessage({ data: data });
+        }
+      }, 0);
     }
-  });
+  }]);
 
-  return InlineWorker;
+  return OUroborosWorker;
 })();
 
-module.exports = InlineWorker;
+exports["default"] = OUroborosWorker;
+module.exports = exports["default"];
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}]},{},[1])(1)
 });
