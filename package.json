@@ -9,8 +9,8 @@
   "dependencies": {
     "audiodata": "^1.1.0",
     "ouroboros-worker": "^0.1.0",
-    "wav-decoder": "^0.3.0",
-    "wav-encoder": "^0.3.0"
+    "wav-decoder": "^1.0.0",
+    "wav-encoder": "^1.0.0"
   },
   "devDependencies": {
     "babel": "^6.3.13",
@@ -40,7 +40,7 @@
     "webaudioapi",
     "buffer"
   ],
-  "licenses": "MIT",
+  "license": "MIT",
   "main": "./index.js",
   "repository": {
     "type": "git",
