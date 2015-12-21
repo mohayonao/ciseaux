@@ -1,22 +1,24 @@
-import OUroborosWorker from "ouroboros-worker";
-import render from "./render-worker";
+const InlineWorker = require("inline-worker");
+const render = require("./render-worker");
 
-let worker = new OUroborosWorker(render.self);
-
+let worker = new InlineWorker(render, render.self);
 let __callbacks = [];
 let __data = 1; // data 0 is reserved for silence
 
 worker.onmessage = (e) => {
   let channleData = e.data.buffers.map(buffer => new Float32Array(buffer));
+
   __callbacks[e.data.callbackId](channleData);
   __callbacks[e.data.callbackId] = null;
 };
 
-export default {
+module.exports = {
   transfer(audiodata) {
     let data = __data++;
     let buffers = audiodata.channelData.map(array => array.buffer);
+
     worker.postMessage({ type: "transfer", data, buffers }, buffers);
+
     return data;
   },
   dispose(data) {

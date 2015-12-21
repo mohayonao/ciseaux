@@ -1,12 +1,14 @@
-import AudioData from "audiodata";
-import Track from "./track";
-import Fragment from "./fragment";
-import config from "./config";
-import renderer from "./renderer";
+/* eslint no-use-before-define: 0 */
+
+const AudioData = require("audiodata");
+const Track = require("./track");
+const Fragment = require("./fragment");
+const config = require("./config");
+const renderer = require("./renderer");
 
 let util = {};
 
-export default class Tape {
+class Tape {
   static silence(duration) {
     return new Tape(1, config.sampleRate).silence(duration);
   }
@@ -227,6 +229,7 @@ export default class Tape {
     tapes = Array.prototype.concat.apply([], tapes);
 
     let method;
+
     if (typeof tapes[tapes.length - 1] === "string") {
       method = tapes.pop();
     }
@@ -272,12 +275,12 @@ export default class Tape {
     let duration = this.duration;
     let sampleRate = this.sampleRate;
     let numberOfChannels = this.numberOfChannels;
-
     let usePan = tracks.some((fragments) => {
       return fragments.some((fragment) => {
         return fragment.pan !== 0;
       });
     });
+
     if (usePan) {
       numberOfChannels = Math.max(2, numberOfChannels);
     }
@@ -286,7 +289,7 @@ export default class Tape {
   }
 }
 
-export class TransferredTape extends Tape {
+class TransferredTape extends Tape {
   constructor(audiodata) {
     super(AudioData.getNumberOfChannels(audiodata), audiodata.sampleRate);
 
@@ -334,7 +337,10 @@ util.adjustDuration = function(tape, duration, method) {
     return tape.pitch(tape.duration / duration);
   case "stretch":
     return tape.stretch(tape.duration / duration);
-  default: /* silence */
+  default:
+    /* silence */
     return tape.concat(tape.silence(duration - tape.duration));
   }
 };
+
+module.exports = Tape;

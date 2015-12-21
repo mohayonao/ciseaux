@@ -1,5 +1,5 @@
-import assert from "power-assert";
-import Fragment from "../src/fragment";
+const assert = require("power-assert");
+const Fragment = require("../src/fragment");
 
 describe("Fragment", () => {
   describe("constructor(data: number, beginTime: number, endTime: number)", () => {

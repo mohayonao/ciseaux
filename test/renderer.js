@@ -1,5 +1,7 @@
-import assert from "power-assert";
-import renderer from "../src/renderer";
+const assert = require("power-assert");
+const renderer = require("../src/renderer");
+
+let UNDEFINED;
 
 describe("renderer", () => {
   let transferred = null;
@@ -13,7 +15,6 @@ describe("renderer", () => {
           new Float32Array([ 5, 6, 7, 8, 9 ]),
         ],
       };
-
       let result = renderer.transfer(audiodata);
 
       setTimeout(() => {
@@ -22,7 +23,7 @@ describe("renderer", () => {
         done();
       }, 0);
 
-      assert(renderer.util.repository[result] === undefined);
+      assert(renderer.util.repository[result] === UNDEFINED);
 
       transferred = result;
     });
@@ -36,11 +37,11 @@ describe("renderer", () => {
       renderer.dispose(transferred);
 
       setTimeout(() => {
-        assert(renderer.util.repository[transferred] === undefined);
+        assert(renderer.util.repository[transferred] === UNDEFINED);
         done();
       }, 0);
 
-      assert(renderer.util.repository[transferred] !== undefined);
+      assert(renderer.util.repository[transferred] !== UNDEFINED);
     });
   });
   describe("render(tape: object): Promise<Float32Array[]>", () => {

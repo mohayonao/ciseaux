@@ -1,6 +1,10 @@
-import assert from "power-assert";
-import Fragment from "../src/fragment";
-import Track from "../src/track";
+/* eslint computed-property-spacing: 0 */
+/* eslint no-multi-spaces: 0 */
+/* eslint key-spacing: 0 */
+
+const assert = require("power-assert");
+const Fragment = require("../src/fragment");
+const Track = require("../src/track");
 
 let pickEach = (list, keys) => {
   return list.map((data) => {
@@ -16,7 +20,9 @@ let pickEach = (list, keys) => {
 
 let createTrackFromList = (list) => {
   let track = new Track();
+
   track.fragments = list.map(data => new Fragment(data, 0, 10));
+
   return track;
 };
 
@@ -29,6 +35,7 @@ describe("Track", () => {
       assert(track.duration === 120);
 
       let result = pickEach(track.toJSON(), [ "data", "beginTime", "endTime" ]);
+
       assert.deepEqual(result, [
         { data: 0, beginTime: 0, endTime: 120 },
       ]);
@@ -55,8 +62,8 @@ describe("Track", () => {
   describe("#gain(gain: number): Track", () => {
     it("works", () => {
       let track = new Track();
-
       let result = track;
+
       result = result.append(createTrackFromList([ 0, 1 ])).gain(0.5);
       result = result.append(createTrackFromList([ 2, 3 ])).gain(0.5);
       result = result.append(createTrackFromList([ 4, 5 ])).gain(1.0);
@@ -89,8 +96,8 @@ describe("Track", () => {
   describe("#pan(pan: number): Track", () => {
     it("works", () => {
       let track = new Track();
-
       let result = track;
+
       result = result.append(createTrackFromList([ 0, 1 ])).pan(0.25);
       result = result.append(createTrackFromList([ 2, 3 ])).pan(0.25);
       result = result.append(createTrackFromList([ 4, 5 ])).pan(0.0);
@@ -123,8 +130,8 @@ describe("Track", () => {
   describe("#reverse(): Track", () => {
     it("works", () => {
       let track = new Track();
-
       let result = track;
+
       result = result.append(createTrackFromList([ 0, 1 ])).reverse(); // 1 0
       result = result.append(createTrackFromList([ 2, 3 ])).reverse(); // 3 2 0 1
       result = result.append(createTrackFromList([ 4, 5 ])).reverse(); // 5 4 1 0 2 3
@@ -157,8 +164,8 @@ describe("Track", () => {
   describe("#pitch(rate: number): Track", () => {
     it("works", () => {
       let track = new Track();
-
       let result = track;
+
       result = result.append(createTrackFromList([ 0, 1 ])).pitch(0.25);
       result = result.append(createTrackFromList([ 2, 3 ])).pitch(0.5);
       result = result.append(createTrackFromList([ 4, 5 ])).stretch(1.0);
@@ -191,8 +198,8 @@ describe("Track", () => {
   describe("#stretch(rate: number): Track", () => {
     it("works", () => {
       let track = new Track();
-
       let result = track;
+
       result = result.append(createTrackFromList([ 0, 1 ])).stretch(0.25);
       result = result.append(createTrackFromList([ 2, 3 ])).stretch(0.5);
       result = result.append(createTrackFromList([ 4, 5 ])).pitch(1.0);
@@ -225,7 +232,6 @@ describe("Track", () => {
   describe("#clone(): Track", () => {
     it("should return a cloned Track", () => {
       let track = createTrackFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-
       let result = track.clone();
 
       assert(result !== track);
@@ -235,7 +241,6 @@ describe("Track", () => {
   describe("#slice(beginTime: number, duration: number): Track", () => {
     it("works", () => {
       let track = createTrackFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-
       let result = track.slice(55, 30);
 
       assert(result !== track);
@@ -250,7 +255,6 @@ describe("Track", () => {
     });
     it("given negative beginTime", () => {
       let track = createTrackFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-
       let result = track.slice(-20, 30);
 
       assert(result !== track);
@@ -264,7 +268,6 @@ describe("Track", () => {
     });
     it("out of range", () => {
       let track = createTrackFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-
       let result = track.slice(95, 30);
 
       assert(result !== track);
@@ -285,7 +288,6 @@ describe("Track", () => {
   describe("#addFragment(fragment: Fragment): self", () => {
     it("works", () => {
       let track = new Track();
-
       let result = track;
 
       assert(result.fragments.length === 0);
@@ -305,7 +307,6 @@ describe("Track", () => {
   describe("#append(track: Track): self", () => {
     it("works", () => {
       let track = new Track();
-
       let result = track;
 
       assert(result.fragments.length === 0);

@@ -4,31 +4,7 @@
     "node": true
   },
   "rules": {
-    // possible errors
-    "comma-dangle": [ 2, "always-multiline" ],
-    "no-console": 0,
-    "no-extra-boolean-cast": 0,
-
-    // best practice
-    "no-else-return": 2,
-    "no-floating-decimal": 2,
-    "no-throw-literal": 2,
-    "no-multi-spaces": 0,
-    "yoda": 0,
-    "wrap-iife": [ 2, "inside" ],
-
-    // strict mode
-    "strict": [ 2, "never" ],
-
-    // variables
-    "no-shadow": 0,
-
-    // style
-    "comma-spacing": 0,
-    "key-spacing": 0,
-    "no-underscore-dangle": 0,
-    "no-use-before-define": 0,
-    "quotes": [ 2, "double", "avoid-escape" ],
-    "space-infix-ops": [ 2, { "int32Hint": true } ]
-  }
+    "no-inline-comments": 0
+  },
+  "extends": "mohayonao"
 }

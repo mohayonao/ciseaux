@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   context: null,
   sampleRate: 0,
   load: null,

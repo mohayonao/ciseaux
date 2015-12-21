@@ -1,10 +1,10 @@
-import fs from "fs";
-import WavDecoder from "wav-decoder";
-import WavEncoder from "wav-encoder";
-import AudioData from "audiodata";
-import Tape from "./tape";
-import config from "./config";
-import renderer from "./renderer";
+const fs = require("fs");
+const WavDecoder = require("wav-decoder");
+const WavEncoder = require("wav-encoder");
+const AudioData = require("audiodata");
+const Tape = require("./tape");
+const config = require("./config");
+const renderer = require("./renderer");
 
 function load(filepath) {
   return new Promise((resolve, reject) => {
@@ -50,9 +50,9 @@ function render(tape, numberOfChannels = 0) {
   });
 }
 
-export default function() {
+module.exports = function() {
   config.load = load;
   config.decode = decode;
   config.from = from;
   config.render = render;
-}
+};

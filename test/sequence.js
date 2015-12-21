@@ -1,7 +1,9 @@
-import assert from "power-assert";
-import Fragment from "../src/fragment";
-import Tape from "../src/tape";
-import Sequence from "../src/sequence";
+/* eslint key-spacing: 0 */
+
+const assert = require("power-assert");
+const Fragment = require("../src/fragment");
+const Tape = require("../src/tape");
+const Sequence = require("../src/sequence");
 
 let pickEach = (list, keys) => {
   return list.map((data) => {
@@ -17,9 +19,11 @@ let pickEach = (list, keys) => {
 
 let createTapeFromList = (list) => {
   let tape = new Tape(2, 8000);
+
   list.forEach((data) => {
     tape.tracks[0].addFragment(new Fragment(data, 0, 10));
   });
+
   return tape;
 };
 
@@ -42,7 +46,6 @@ describe("Sequence", () => {
           b: createTapeFromList([ 2 ]),
           c: createTapeFromList([ 3 ]),
         });
-
         let result1 = seq.apply();
         let result2 = seq.apply();
 
@@ -67,7 +70,6 @@ describe("Sequence", () => {
     context("(pattern, durationPerStep) -> (instruments)", () => {
       it("works", () => {
         let seq = new Sequence("abc", 5);
-
         let result1 = seq.apply({
           a: createTapeFromList([ 1 ]),
           b: createTapeFromList([ 2 ]),
@@ -100,7 +102,6 @@ describe("Sequence", () => {
     context("(pattern) -> (durationPerStep, instruments)", () => {
       it("works", () => {
         let seq = new Sequence("abc");
-
         let result1 = seq.apply(5, {
           a: createTapeFromList([ 1 ]),
           b: createTapeFromList([ 2 ]),
@@ -133,7 +134,6 @@ describe("Sequence", () => {
     context("() -> (pattern, durationPerStep, instruments)", () => {
       it("works", () => {
         let seq = new Sequence();
-
         let result1 = seq.apply("abc", 5, {
           a: createTapeFromList([ 1 ]),
           b: createTapeFromList([ 2 ]),
@@ -166,7 +166,6 @@ describe("Sequence", () => {
     context("invalid arguments", () => {
       it("works", () => {
         let seq = new Sequence(true);
-
         let result1 = seq.apply(false);
         let result2 = seq.apply(false);
 
@@ -185,7 +184,6 @@ describe("Sequence", () => {
           b: createTapeFromList([ 2 ]),
           c: createTapeFromList([ 3 ]),
         });
-
         let result = seq.apply([ 5, 10, 15 ]);
 
         assert(result instanceof Tape);
@@ -206,7 +204,6 @@ describe("Sequence", () => {
             return createTapeFromList([ (index + 1) * 2 ]);
           },
         });
-
         let result = seq.apply();
 
         assert(result instanceof Tape);
@@ -227,7 +224,6 @@ describe("Sequence", () => {
             return createTapeFromList([ ch.charCodeAt(ch) ]);
           },
         });
-
         let result = seq.apply();
 
         assert(result instanceof Tape);
@@ -248,7 +244,6 @@ describe("Sequence", () => {
         let seq = new Sequence("abc", 0, {
           c: null,
         });
-
         let result = seq.apply();
 
         assert(result instanceof Tape);

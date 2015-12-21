@@ -1,7 +1,11 @@
-import assert from "power-assert";
-import config from "../src/config";
-import Fragment from "../src/fragment";
-import Tape from "../src/tape";
+/* eslint computed-property-spacing: 0 */
+/* eslint no-multi-spaces: 0 */
+/* eslint key-spacing: 0 */
+
+const assert = require("power-assert");
+const config = require("../src/config");
+const Fragment = require("../src/fragment");
+const Tape = require("../src/tape");
 
 let pickEach = (list, keys) => {
   return list.map((data) => {
@@ -17,9 +21,11 @@ let pickEach = (list, keys) => {
 
 let createTapeFromList = (list) => {
   let tape = new Tape(2, 8000);
+
   list.forEach((data) => {
     tape.tracks[0].addFragment(new Fragment(data, 0, 10));
   });
+
   return tape;
 };
 
@@ -36,7 +42,6 @@ describe("Tape", () => {
     it("should create a new Tape", () => {
       let tape1 = createTapeFromList([ 0, 1 ]);
       let tape2 = createTapeFromList([ 2, 3 ]);
-
       let result = Tape.concat([ tape1, tape2, null ]);
 
       assert(result instanceof Tape);
@@ -56,7 +61,6 @@ describe("Tape", () => {
     it("works", () => {
       let tape1 = createTapeFromList([ 0, 1 ]);
       let tape2 = createTapeFromList([ 2, 3, 4, 5 ]);
-
       let result = Tape.mix([ tape1, tape2 ]);
 
       assert(result instanceof Tape);
@@ -152,6 +156,7 @@ describe("Tape", () => {
       tape = tape.concat(createTapeFromList([ 8, 9 ])).gain(0.5);
 
       let result = pickEach(tape.toJSON().tracks[0], [ "data", "gain" ]);
+
       assert.deepEqual(result, [
         { data: 0, gain: 0.0625 },
         { data: 1, gain: 0.0625 },
@@ -177,6 +182,7 @@ describe("Tape", () => {
       tape = tape.concat(createTapeFromList([ 8, 9 ])).pan(0.25);
 
       let result = pickEach(tape.toJSON().tracks[0], [ "data", "pan" ]);
+
       assert.deepEqual(result, [
         { data: 0, pan: 1.00 },
         { data: 1, pan: 1.00 },
@@ -202,6 +208,7 @@ describe("Tape", () => {
       tape = tape.concat(createTapeFromList([ 8, 9 ])).reverse(); // 9 8 5 4 1 0 2 3 6 7
 
       let result = pickEach(tape.toJSON().tracks[0], [ "data", "reverse" ]);
+
       assert.deepEqual(result, [
         { data: 9, reverse: true  },
         { data: 8, reverse: true  },
@@ -227,6 +234,7 @@ describe("Tape", () => {
       tape = tape.concat(createTapeFromList([ 8, 9 ])).pitch(3.0);
 
       let result = pickEach(tape.toJSON().tracks[0], [ "data", "pitch", "stretch" ]);
+
       assert.deepEqual(result, [
         { data: 0, pitch: 0.75, stretch: false },
         { data: 1, pitch: 0.75, stretch: false },
@@ -252,6 +260,7 @@ describe("Tape", () => {
       tape = tape.concat(createTapeFromList([ 8, 9 ])).stretch(3.0);
 
       let result = pickEach(tape.toJSON().tracks[0], [ "data", "pitch", "stretch" ]);
+
       assert.deepEqual(result, [
         { data: 0, pitch: 0.75, stretch: true },
         { data: 1, pitch: 0.75, stretch: true },
@@ -269,7 +278,6 @@ describe("Tape", () => {
   describe("#clone(): Tape", () => {
     it("works", () => {
       let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-
       let result = tape.clone();
 
       assert(result !== tape);
@@ -285,6 +293,7 @@ describe("Tape", () => {
       tape = tape.concat(tape.silence(2));
 
       let result = pickEach(tape.toJSON().tracks[0], [ "data", "beginTime", "endTime" ]);
+
       assert.deepEqual(result, [
         { data: 0, beginTime: 0, endTime: 1 },
         { data: 0, beginTime: 0, endTime: 2 },
@@ -295,7 +304,6 @@ describe("Tape", () => {
     context("same numberOfTracks", () => {
       it("works", () => {
         let tape = new Tape(2, 8000);
-
         let result = tape.concat(
           createTapeFromList([ 0, 1 ]),
           createTapeFromList([ 2, 3 ]),
@@ -329,7 +337,6 @@ describe("Tape", () => {
         let tape1 = createTapeFromList([ 0, 1 ]);
         let tape2 = createTapeFromList([ 2, 3 ]).mix(createTapeFromList([ 4, 5 ])).mix(createTapeFromList([ 6, 7 ]));
         let tape3 = createTapeFromList([ 8, 9 ]);
-
         let result = tape1.concat(tape2, tape3);
 
         assert(result.numberOfTracks === 3);
@@ -368,7 +375,6 @@ describe("Tape", () => {
     context("without arguments", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-
         let result = tape.slice();
 
         assert(result !== tape);
@@ -391,7 +397,6 @@ describe("Tape", () => {
     context("without duration", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-
         let result = tape.slice(55);
 
         assert(result !== tape);
@@ -409,7 +414,6 @@ describe("Tape", () => {
     context("with all arguments", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-
         let result = tape.slice(55, 30);
 
         assert(result !== tape);
@@ -426,7 +430,6 @@ describe("Tape", () => {
     context("given negative beginTime", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-
         let result = tape.slice(-55, 30);
 
         assert(result !== tape);
@@ -445,7 +448,6 @@ describe("Tape", () => {
     context("without arguments", () => {
       it("works (default n = 2)", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4 ]);
-
         let result = tape.loop();
 
         assert(result !== tape);
@@ -468,7 +470,6 @@ describe("Tape", () => {
     context("given n", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4 ]);
-
         let result = tape.loop(3);
 
         assert(result !== tape);
@@ -496,7 +497,6 @@ describe("Tape", () => {
     context("given n = 0", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4 ]);
-
         let result = tape.loop(0);
 
         assert(result !== tape);
@@ -511,7 +511,6 @@ describe("Tape", () => {
     context("without arguments", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4 ]);
-
         let result = tape.fill();
 
         assert(result !== tape);
@@ -529,7 +528,6 @@ describe("Tape", () => {
     context("given duration", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4 ]);
-
         let result = tape.fill(75);
 
         assert(result !== tape);
@@ -550,7 +548,6 @@ describe("Tape", () => {
     context("given duration = 0", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4 ]);
-
         let result = tape.fill(0);
 
         assert(result !== tape);
@@ -563,7 +560,6 @@ describe("Tape", () => {
     context("from empty", () => {
       it("works", () => {
         let tape = new Tape(2, 8000);
-
         let result = tape.fill(10);
 
         assert(result !== tape);
@@ -579,7 +575,6 @@ describe("Tape", () => {
     context("without arguments", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-
         let result = tape.replace();
 
         assert(result !== tape);
@@ -602,7 +597,6 @@ describe("Tape", () => {
     context("given all arguments", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-
         let result = tape.replace(55, 30, createTapeFromList([ 10, 20, 30 ]));
 
         assert(result !== tape);
@@ -628,7 +622,6 @@ describe("Tape", () => {
     context("given negative beginTime", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-
         let result = tape.replace(-55, 30, createTapeFromList([ 10, 20, 30 ]));
 
         assert(result !== tape);
@@ -654,7 +647,6 @@ describe("Tape", () => {
     context("given a function as a tape", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-
         let result = tape.replace(-55, 30, (tape) => {
           return tape.loop();
         });
@@ -689,13 +681,13 @@ describe("Tape", () => {
     context("withtout arguments", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-
         let result = tape.split();
 
         assert(Array.isArray(result));
         assert(result.length === 2);
 
         let result0 = pickEach(result[0].toJSON().tracks[0], [ "data", "beginTime", "endTime" ]);
+
         assert.deepEqual(result0, [
           { data: 0, beginTime: 0, endTime: 10 },
           { data: 1, beginTime: 0, endTime: 10 },
@@ -705,6 +697,7 @@ describe("Tape", () => {
         ]);
 
         let result1 = pickEach(result[1].toJSON().tracks[0], [ "data", "beginTime", "endTime" ]);
+
         assert.deepEqual(result1, [
           { data: 5, beginTime: 0, endTime: 10 },
           { data: 6, beginTime: 0, endTime: 10 },
@@ -717,13 +710,13 @@ describe("Tape", () => {
     context("given n", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-
         let result = tape.split(4);
 
         assert(Array.isArray(result));
         assert(result.length === 4);
 
         let result0 = pickEach(result[0].toJSON().tracks[0], [ "data", "beginTime", "endTime" ]);
+
         assert.deepEqual(result0, [
           { data: 0, beginTime: 0, endTime: 10 },
           { data: 1, beginTime: 0, endTime: 10 },
@@ -731,6 +724,7 @@ describe("Tape", () => {
         ]);
 
         let result1 = pickEach(result[1].toJSON().tracks[0], [ "data", "beginTime", "endTime" ]);
+
         assert.deepEqual(result1, [
           { data: 2, beginTime: 5, endTime: 10 },
           { data: 3, beginTime: 0, endTime: 10 },
@@ -738,6 +732,7 @@ describe("Tape", () => {
         ]);
 
         let result2 = pickEach(result[2].toJSON().tracks[0], [ "data", "beginTime", "endTime" ]);
+
         assert.deepEqual(result2, [
           { data: 5, beginTime: 0, endTime: 10 },
           { data: 6, beginTime: 0, endTime: 10 },
@@ -745,6 +740,7 @@ describe("Tape", () => {
         ]);
 
         let result3 = pickEach(result[3].toJSON().tracks[0], [ "data", "beginTime", "endTime" ]);
+
         assert.deepEqual(result3, [
           { data: 7, beginTime: 5, endTime: 10 },
           { data: 8, beginTime: 0, endTime: 10 },
@@ -755,7 +751,6 @@ describe("Tape", () => {
     context("given n = 0", () => {
       it("works", () => {
         let tape = createTapeFromList([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-
         let result = tape.split(0);
 
         assert(Array.isArray(result));
@@ -766,7 +761,6 @@ describe("Tape", () => {
   describe("#mix(tape: Tape, method:string): Tape", () => {
     context("without arguments", () => {
       let tape1 = createTapeFromList([ 0, 1, 2, 3 ]);
-
       let result = tape1.mix();
 
       assert(result !== tape1);
@@ -785,7 +779,6 @@ describe("Tape", () => {
       it("works", () => {
         let tape1 = createTapeFromList([ 0, 1, 2, 3 ]);
         let tape2 = createTapeFromList([ 4, 5, 6, 7, 8, 9 ]);
-
         let result = tape1.mix(tape2);
 
         assert(result !== tape1);
@@ -818,7 +811,6 @@ describe("Tape", () => {
       it("works", () => {
         let tape1 = createTapeFromList([ 0, 1, 2, 3 ]);
         let tape2 = createTapeFromList([ 4, 5, 6, 7, 8, 9 ]);
-
         let result = tape1.mix(tape2, "fill");
 
         assert(result !== tape1);
@@ -852,7 +844,6 @@ describe("Tape", () => {
       it("works", () => {
         let tape1 = createTapeFromList([ 0, 1, 2, 3, 4, 5 ]);
         let tape2 = createTapeFromList([ 6, 7, 8, 9 ]);
-
         let result = tape1.mix(tape2, "pitch");
 
         assert(result !== tape1);
@@ -884,7 +875,6 @@ describe("Tape", () => {
       it("works", () => {
         let tape1 = createTapeFromList([ 0, 1, 2, 3, 4, 5 ]);
         let tape2 = createTapeFromList([ 6, 7, 8, 9 ]);
-
         let result = tape1.mix(tape2, "stretch");
 
         assert(result !== tape1);
@@ -915,6 +905,7 @@ describe("Tape", () => {
   });
   describe("#render(): Promise", () => {
     let config$render;
+
     before(() => {
       config$render = config.render;
     });
