@@ -1,3 +1,6 @@
+/* eslint computed-property-spacing: 0 */
+/* eslint no-multi-spaces: 0 */
+
 import assert from "power-assert";
 import renderer from "../src/renderer";
 import render from "../src/render-worker";
@@ -33,11 +36,12 @@ describe("render", () => {
   describe("render(tape: object, destination: Float32Array[]): void", () => {
     it("works", (done) => {
       const X = 0.5;
-
       let buffer = new Float32Array(8000);
+
       for (let i = 0; i < buffer.length; i++) {
         buffer[i] = X;
       }
+
       let data = renderer.transfer({ sampleRate: 8000, channelData: [ buffer ] });
 
       let tape = {
@@ -135,7 +139,6 @@ describe("render", () => {
         new Float32Array([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]),
         new Float32Array([ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 ]),
       ];
-
       let subarray = render.util.subarray(source, 2, 5);
 
       assert(Array.isArray(subarray));
@@ -594,7 +597,6 @@ describe("mix1(src: number[]): number[]", () => {
   });
   it("2->4", () => {
     let src = [ L, R ];
-
     let dst = render.util.mix1["2->4"](src);
 
     assert(dst.length === 4);

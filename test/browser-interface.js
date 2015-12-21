@@ -132,7 +132,6 @@ describe("browser-interface", () => {
     describe("(src: string): Promise<Tape>", () => {
       it("works", () => {
         let src = "./sound/tape1.wav";
-
         let result = config.from(src);
 
         assert(result instanceof Promise);
@@ -143,7 +142,6 @@ describe("browser-interface", () => {
       });
       it("not work", () => {
         let src = "./sound/tape*.wav";
-
         let result = config.from(src);
 
         assert(result instanceof Promise);

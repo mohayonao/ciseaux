@@ -6,6 +6,7 @@ function getInstrumentFromRegExp(instruments, ch) {
 
   for (let i = 0; i < keys.length; i++) {
     let matches = /^\/(.+)?\/(\w*)$/.exec(keys[i]);
+
     if (matches && new RegExp(matches[1], matches[2]).test(ch)) {
       return instruments[keys[i]];
     }

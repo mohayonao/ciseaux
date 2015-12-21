@@ -6,16 +6,18 @@ self.repository = [];
 
 self.onmessage = (e) => {
   switch (e.data.type) {
-    case "transfer":
-      self.repository[e.data.data] = e.data.buffers.map(buffer => new Float32Array(buffer));
-      break;
-    case "dispose":
-      delete self.repository[e.data.data];
-      break;
-    case "render":
-      self.startRendering(e.data.tape, e.data.callbackId);
-      break;
-    }
+  case "transfer":
+    self.repository[e.data.data] = e.data.buffers.map(buffer => new Float32Array(buffer));
+    break;
+  case "dispose":
+    delete self.repository[e.data.data];
+    break;
+  case "render":
+    self.startRendering(e.data.tape, e.data.callbackId);
+    break;
+  default:
+    // do nothing
+  }
 };
 
 self.startRendering = (tape, callbackId) => {
@@ -154,17 +156,20 @@ self.pan[1] = (src, l, r) => {
 };
 self.pan[2] = (src, l, r) => {
   let x = (src[0] + src[1]) * 0.5;
+
   return [ x * l, x * r ];
 };
 self.pan[4] = (src, l, r) => {
   let x = (src[0] + src[1]) * 0.5;
   let y = (src[2] + src[3]) * 0.5;
-  return [ x * l, x * r , y * l, y * r ];
+
+  return [ x * l, x * r, y * l, y * r ];
 };
 self.pan[6] = (src, l, r) => {
   let x = (src[0] + src[1]) * 0.5;
   let y = (src[4] + src[5]) * 0.5;
-  return [ x * l, x * r , src[2], src[3], y * l, y * r ];
+
+  return [ x * l, x * r, src[2], src[3], y * l, y * r ];
 };
 
 self.mix = {};

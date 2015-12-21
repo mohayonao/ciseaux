@@ -1,3 +1,5 @@
+/* eslint no-use-before-define: 0 */
+
 import AudioData from "audiodata";
 import Track from "./track";
 import Fragment from "./fragment";
@@ -227,6 +229,7 @@ export default class Tape {
     tapes = Array.prototype.concat.apply([], tapes);
 
     let method;
+
     if (typeof tapes[tapes.length - 1] === "string") {
       method = tapes.pop();
     }
@@ -272,12 +275,12 @@ export default class Tape {
     let duration = this.duration;
     let sampleRate = this.sampleRate;
     let numberOfChannels = this.numberOfChannels;
-
     let usePan = tracks.some((fragments) => {
       return fragments.some((fragment) => {
         return fragment.pan !== 0;
       });
     });
+
     if (usePan) {
       numberOfChannels = Math.max(2, numberOfChannels);
     }
@@ -334,7 +337,8 @@ util.adjustDuration = function(tape, duration, method) {
     return tape.pitch(tape.duration / duration);
   case "stretch":
     return tape.stretch(tape.duration / duration);
-  default: /* silence */
+  default:
+    /* silence */
     return tape.concat(tape.silence(duration - tape.duration));
   }
 };

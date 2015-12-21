@@ -8,6 +8,7 @@ let AudioContext = global.AudioContext || global.webkitAudioContext;
 function load(url) {
   return new Promise((resolve, reject) => {
     let xhr = new global.XMLHttpRequest();
+
     xhr.open("GET", url);
     xhr.responseType = "arraybuffer";
     xhr.onload = () => {
