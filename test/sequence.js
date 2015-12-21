@@ -1,9 +1,9 @@
 /* eslint key-spacing: 0 */
 
-import assert from "power-assert";
-import Fragment from "../src/fragment";
-import Tape from "../src/tape";
-import Sequence from "../src/sequence";
+const assert = require("power-assert");
+const Fragment = require("../src/fragment");
+const Tape = require("../src/tape");
+const Sequence = require("../src/sequence");
 
 let pickEach = (list, keys) => {
   return list.map((data) => {

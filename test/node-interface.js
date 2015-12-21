@@ -1,8 +1,8 @@
-import assert from "power-assert";
-import AudioData from "audiodata";
-import config from "../src/config";
-import Tape from "../src/tape";
-import nodeInterface from "../src/node-interface";
+const assert = require("power-assert");
+const AudioData = require("audiodata");
+const config = require("../src/config");
+const Tape = require("../src/tape");
+const nodeInterface = require("../src/node-interface");
 
 let wavData = new Buffer([
   0x52, 0x49, 0x46, 0x46, // "RIFF"

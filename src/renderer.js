@@ -1,8 +1,7 @@
-import OUroborosWorker from "ouroboros-worker";
-import render from "./render-worker";
+const OUroborosWorker = require("ouroboros-worker");
+const render = require("./render-worker");
 
 let worker = new OUroborosWorker(render.self);
-
 let __callbacks = [];
 let __data = 1; // data 0 is reserved for silence
 
@@ -13,7 +12,7 @@ worker.onmessage = (e) => {
   __callbacks[e.data.callbackId] = null;
 };
 
-export default {
+module.exports = {
   transfer(audiodata) {
     let data = __data++;
     let buffers = audiodata.channelData.map(array => array.buffer);

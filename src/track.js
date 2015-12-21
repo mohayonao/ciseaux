@@ -1,6 +1,6 @@
-import Fragment from "./fragment";
+const Fragment = require("./fragment");
 
-export default class Track {
+class Track {
   static silence(duration) {
     return new Track([ new Fragment(0, 0, duration) ], duration);
   }
@@ -91,3 +91,5 @@ export default class Track {
     return this;
   }
 }
+
+module.exports = Track;

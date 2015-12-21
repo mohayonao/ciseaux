@@ -1,10 +1,10 @@
-import Sequence from "./sequence";
-import Tape from "./tape";
-import config from "./config";
+const Sequence = require("./sequence");
+const Tape = require("./tape");
+const config = require("./config");
 
 let AudioContext = global.AudioContext || global.webkitAudioContext;
 
-export default {
+module.exports = {
   get context() {
     return config.context;
   },

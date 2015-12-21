@@ -2,10 +2,10 @@
 /* eslint no-multi-spaces: 0 */
 /* eslint key-spacing: 0 */
 
-import assert from "power-assert";
-import config from "../src/config";
-import Fragment from "../src/fragment";
-import Tape from "../src/tape";
+const assert = require("power-assert");
+const config = require("../src/config");
+const Fragment = require("../src/fragment");
+const Tape = require("../src/tape");
 
 let pickEach = (list, keys) => {
   return list.map((data) => {

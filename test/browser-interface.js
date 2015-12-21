@@ -1,9 +1,9 @@
-import assert from "power-assert";
-import AudioData from "audiodata";
-import XMLHttpRequest from "./assets/xml-http-request";
-import config from "../src/config";
-import Tape from "../src/tape";
-import browserInterface from "../src/browser-interface";
+const assert = require("power-assert");
+const AudioData = require("audiodata");
+const XMLHttpRequest = require("./assets/xml-http-request");
+const config = require("../src/config");
+const Tape = require("../src/tape");
+const browserInterface = require("../src/browser-interface");
 
 global.XMLHttpRequest = XMLHttpRequest;
 

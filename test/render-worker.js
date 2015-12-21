@@ -1,9 +1,9 @@
 /* eslint computed-property-spacing: 0 */
 /* eslint no-multi-spaces: 0 */
 
-import assert from "power-assert";
-import renderer from "../src/renderer";
-import render from "../src/render-worker";
+const assert = require("power-assert");
+const renderer = require("../src/renderer");
+const render = require("../src/render-worker");
 
 let closeTo = (actual, expected, delta) => {
   return Math.abs(actual - expected) <= delta;

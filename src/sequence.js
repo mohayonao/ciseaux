@@ -1,5 +1,5 @@
-import Tape from "./tape";
-import config from "./config";
+const Tape = require("./tape");
+const config = require("./config");
 
 function getInstrumentFromRegExp(instruments, ch) {
   let keys = Object.keys(instruments);
@@ -31,7 +31,7 @@ function getInstrumentFrom(instruments, ch, index, tape) {
   return (instrument instanceof Tape) ? instrument : null;
 }
 
-export default class Sequence {
+class Sequence {
   constructor(...args) {
     this.pattern = this.instruments = this.durationPerStep = null;
     args.forEach((arg) => {
@@ -84,3 +84,5 @@ export default class Sequence {
     }, new Tape(1, config.sampleRate));
   }
 }
+
+module.exports = Sequence;

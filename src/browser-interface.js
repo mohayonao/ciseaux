@@ -1,7 +1,7 @@
-import AudioData from "audiodata";
-import Tape from "./tape";
-import config from "./config";
-import renderer from "./renderer";
+const AudioData = require("audiodata");
+const Tape = require("./tape");
+const config = require("./config");
+const renderer = require("./renderer");
 
 let AudioContext = global.AudioContext || global.webkitAudioContext;
 
@@ -79,9 +79,9 @@ function render(tape, numberOfChannels = 0) {
   });
 }
 
-export default function() {
+module.exports = function() {
   config.load = load;
   config.decode = decode;
   config.from = from;
   config.render = render;
-}
+};

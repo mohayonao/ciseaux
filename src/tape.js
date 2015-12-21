@@ -1,14 +1,14 @@
 /* eslint no-use-before-define: 0 */
 
-import AudioData from "audiodata";
-import Track from "./track";
-import Fragment from "./fragment";
-import config from "./config";
-import renderer from "./renderer";
+const AudioData = require("audiodata");
+const Track = require("./track");
+const Fragment = require("./fragment");
+const config = require("./config");
+const renderer = require("./renderer");
 
 let util = {};
 
-export default class Tape {
+class Tape {
   static silence(duration) {
     return new Tape(1, config.sampleRate).silence(duration);
   }
@@ -289,7 +289,7 @@ export default class Tape {
   }
 }
 
-export class TransferredTape extends Tape {
+class TransferredTape extends Tape {
   constructor(audiodata) {
     super(AudioData.getNumberOfChannels(audiodata), audiodata.sampleRate);
 
@@ -342,3 +342,5 @@ util.adjustDuration = function(tape, duration, method) {
     return tape.concat(tape.silence(duration - tape.duration));
   }
 };
+
+module.exports = Tape;

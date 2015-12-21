@@ -1,5 +1,5 @@
-import assert from "power-assert";
-import renderer from "../src/renderer";
+const assert = require("power-assert");
+const renderer = require("../src/renderer");
 
 let UNDEFINED;
 

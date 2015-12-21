@@ -1,6 +1,6 @@
-import fs from "fs";
+const fs = require("fs");
 
-export class XMLHttpRequest {
+class XMLHttpRequest {
   constructor() {
     this.url = "";
     this.status = 0;
@@ -35,4 +35,4 @@ export class XMLHttpRequest {
   }
 }
 
-export default XMLHttpRequest;
+module.exports = XMLHttpRequest;

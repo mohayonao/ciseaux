@@ -1,5 +1,4 @@
 let self = global.self || {};
-
 let render = {};
 
 self.repository = [];
