@@ -1,7 +1,7 @@
-const OUroborosWorker = require("ouroboros-worker");
+const InlineWorker = require("inline-worker");
 const render = require("./render-worker");
 
-let worker = new OUroborosWorker(render.self);
+let worker = new InlineWorker(render, render.self);
 let __callbacks = [];
 let __data = 1; // data 0 is reserved for silence
 

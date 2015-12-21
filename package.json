@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "audiodata": "^1.1.0",
-    "ouroboros-worker": "^0.1.0",
+    "inline-worker": "^1.0.0",
     "wav-decoder": "^1.0.0",
     "wav-encoder": "^1.0.0"
   },
