@@ -113,37 +113,49 @@ Ciseaux.from("/path/to/audio.wav").then((tape) => {
 
 #### slice + concat
 ```js
-tape = tape2.slice(0, 1.5).concat(tape3.slice(0, 0.5), tape1.slice(-2));
+tape = tape2.slice(0, 1.5).concat(
+  tape3.slice(0, 0.5), tape1.slice(-2)
+);
 ```
 
 #### slice + concat + loop
 ```js
-tape = tape3.slice(0, 0.5).concat(Ciseaux.silence(0.5)).loop(4);
+tape = tape3.slice(0, 0.5).concat(
+  Ciseaux.silence(0.5)
+).loop(4);
 ```
 
 #### replace + reverse
 ```js
-tape = tape1.replace(2, 3, tape => tape.reverse());
+tape = tape1.replace(2, 3, function(tape) {
+  return tape.reverse();
+});
 ```
 
 #### gain
 ```js
 tape = Ciseaux.concat(
-  tape1.split(25).map((tape, i) => tape.gain(i / 25))
+  tape1.split(25).map(function(tape, i) {
+    return tape.gain(i / 25);
+  })
 );
 ```
 
 #### pan
 ```js
 tape = Ciseaux.concat(
-  tape1.split(25).map((tape, i) => tape.pan(i % 2 ? -0.85 : +0.85))
+  tape1.split(25).map(function(tape, i) {
+    return tape.pan(i % 2 ? -0.85 : +0.85);
+  })
 );
 ```
 
 #### pitch
 ```js
 tape = Ciseaux.concat(
-  tape1.split(25).map((tape, i) => tape.pitch(i / 50 + 0.75))
+  tape1.split(25).map(function(tape, i) {
+    return tape.pitch(i / 50 + 0.75);
+  })
 );
 ```
 
@@ -155,25 +167,31 @@ tape = tape1.mix(tape2.gain(0.5), "fill").fill(30);
 #### stutter
 ```js
 tape = Ciseaux.concat(
-  tape2.split(16).map(tape => tape.loop(4).pitch(1.5))
+  tape2.split(16).map(function(tape) {
+    return tape.loop(4).pitch(1.5);
+  })
 ).fill(30);
 ```
 
 #### phase
 ```js
-tape = Ciseaux.mix([ 1, 0.95 ].map(rate => tape2.pitch(rate).fill(30)));
+tape = Ciseaux.mix(
+  [ 1, 0.95 ].map(function(rate) {
+    return tape2.pitch(rate).fill(30);
+  })
+);
 ```
 
 #### lace
 ```js
-tape = Ciseaux.concat(tape1.split(32).map((tape, index) => {
+tape = Ciseaux.concat(tape1.split(32).map(function(tape, index) {
   return index % 2 ? tape2.pitch(2).fill(tape.duration) : tape;
 })).fill(30);
 ```
 
 #### concrete
 ```js
-tape = Ciseaux.mix([ -12, -10, -7, -3, 0 ].map((midi) => {
+tape = Ciseaux.mix([ -12, -10, -7, -3, 0 ].map(function(midi) {
   return tape1.pitch(Math.pow(2, midi * 1/12));
 }), "fill").gain(0.5).fill(30);
 ```
@@ -203,7 +221,7 @@ tape = new Ciseaux.Sequence("a bdaabcaccbgabb", {
   e: tape2.split(16)[4].pitch(0.25),
   f: tape2.split(16)[5].pitch(4).gain(0.1),
   g: tape3.pitch(32),
-}).apply([ 2/3, 1/3 ].map(x => x * 0.3)).fill(30);
+}).apply([ 2/3, 1/3 ].map(function(x) { return x * 0.3; })).fill(30);
 ```
 
 ## :scissors: Architecture
