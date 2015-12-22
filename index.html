@@ -63,7 +63,6 @@
     var CANVAS_WIDTH  = 320;
     var CANVAS_HEIGHT = 240;
     var CANVAS_BG = "#34495e";
-
     var AudioContext = window.AudioContext || window.webkitAudioContext;
     var audioContext = new AudioContext();
 
@@ -72,6 +71,7 @@
     function fetch(url) {
       return new Promise(function(resolve, reject) {
         var xhr = new XMLHttpRequest();
+
         xhr.open("GET", url);
         if (/\.(wav|mp3|ogg|aif)$/.test(url)) {
           xhr.responseType = "arraybuffer";
@@ -108,10 +108,14 @@
       TapePlayer.prototype.chore = function(audioContext) {
         if (!this._chored) {
           var bufSrc = this.audioContext.createBufferSource();
+          var buffer = this.audioContext.createBuffer(1, 128, this.audioContext.sampleRate);
+
+          bufSrc.buffer = buffer;
           bufSrc.start(this.audioContext.currentTime);
-          bufSrc.connect(this.audioContext.destination);
           bufSrc.stop(this.audioContext.currentTime);
+          bufSrc.connect(this.audioContext.destination);
           bufSrc.disconnect();
+
           this._chored = true;
         }
         return this;
@@ -127,6 +131,7 @@
 
           if (window.tape) {
             var _this = this;
+
             window.tape.render(2).then(function(audioBuffer) {
               _this.draw(name, audioBuffer);
               _this.bufSrc = _this.audioContext.createBufferSource();
